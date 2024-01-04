@@ -11,20 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('super_admins', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('pin_code', 10)->nullable();
-            $table->date('birthdate')->nullable();
-            $table->string('image_path')->nullable();
-            $table->boolean('allow_manual_entry')->default(false);
-            $table->boolean('allow_qr_code_entry')->default(true);
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('avatar')->nullable();
             $table->string('password');
-            $table->boolean('is_admin')->default(false);
-            $table->unsignedBigInteger('business_id');
-            $table->foreign('business_id')->references('id')->on('businesses');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -35,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('super_admins');
     }
 };
