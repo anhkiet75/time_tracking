@@ -30,8 +30,9 @@ class BusinessResource extends Resource
                     ->maxLength(255),
                 TextInput::make('address')
                     ->maxLength(255),
-                TextInput::make('number')
-                    ->label('Phone number')
+                TextInput::make('company_business_number')
+                    ->maxLength(255),
+                TextInput::make('phone_number')
                     ->maxLength(20),
                 Fieldset::make('Admin account')
                     ->schema([
@@ -59,7 +60,9 @@ class BusinessResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('address')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('number')
+                Tables\Columns\TextColumn::make('company_business_number')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('phone_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

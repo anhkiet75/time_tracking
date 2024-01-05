@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('address')->nullable();
-            $table->string('number',20)->nullable();
+            $table->string('phone_number',20)->nullable();
+            $table->string('company_business_number', 20)->nullable();
             $table->unsignedBigInteger('admin_id');
             $table->foreign('admin_id')->references('id')->on('super_admins');
             $table->timestamps();

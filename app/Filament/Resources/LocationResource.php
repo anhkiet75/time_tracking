@@ -17,11 +17,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Tables\Columns;
+use Illuminate\Database\Eloquent\Model;
 
 class LocationResource extends Resource
 {
     protected static ?string $model = Location::class;
-
+    protected static ?string $recordTitleAttribute = 'qr_code';
+    protected static ?string $recordRouteKeyName = 'qr_code';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
@@ -73,8 +75,7 @@ class LocationResource extends Resource
         return [
             'index' => Pages\ListLocations::route('/'),
             'create' => Pages\CreateLocation::route('/create'),
-            'view' => Pages\ViewLocation::route('/{record}'),
-            'edit' => Pages\EditLocation::route('/{record}/edit'),
+            'edit' => Pages\EditLocation::route('/{record:qr_code}/edit'),
         ];
     }
 }

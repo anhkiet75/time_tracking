@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->string('address');
-            $table->string('qr_code');
+            $table->string('qr_code')->unique();
             $table->string('qr_image_path')->nullable();
             $table->float('lat')->nullable();
             $table->float('lng')->nullable();
