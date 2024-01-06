@@ -33,5 +33,13 @@ class DatabaseSeeder extends Seeder
             'business_id' => 1,
             'password' => bcrypt('123'),
         ]);
+
+        \App\Models\User::factory()->create([
+            'name' => 'test',
+            'email' => 'test@gmail.com',
+            'is_admin' => 0,
+            'business_id' => 1,
+            'password' => bcrypt('123'),
+        ]);
     }
 }

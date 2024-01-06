@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Events\UserCreating  as UserCreatingEvent;
 use  App\Listeners\UserCreating as UserCreatingListener;
+use App\Models\Location;
+use App\Observers\LocationObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -20,9 +22,6 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        UserCreatingEvent::class => [
-            UserCreatingListener::class,
-        ]
     ];
 
     /**
@@ -30,7 +29,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Location::observe(LocationObserver::class);
     }
 
     /**

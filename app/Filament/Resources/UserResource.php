@@ -41,7 +41,7 @@ class UserResource extends Resource
                 Toggle::make('allow_qr_code_entry')
                     ->label('Allow QR code entry')
                     ->default(true),
-                FileUpload::make('image_path')
+                FileUpload::make('image_path')->label('image')
             ]);
     }
 
@@ -57,7 +57,7 @@ class UserResource extends Resource
                 TextColumn::make('name'),
                 TextColumn::make('email'),
                 TextColumn::make('birthdate'),
-                IconColumn::make('is_admin')->boolean()
+                IconColumn::make('is_admin')->boolean()->label('Role admin')
             ])
             ->filters([
                 //

@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('qr_image_path')->nullable();
             $table->float('lat')->nullable();
             $table->float('lng')->nullable();
+            $table->boolean('can_logtime')->default(true);
+            $table->boolean('can_check')->default(true);
+            $table->boolean('enable_gps')->default(true);
             $table->unsignedBigInteger('business_id');
             $table->foreign('business_id')->references('id')->on('businesses');
             $table->timestamps();

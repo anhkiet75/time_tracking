@@ -6,11 +6,15 @@ use App\Filament\Resources\LocationResource\Pages;
 use App\Filament\Resources\LocationResource\RelationManagers;
 use App\Models\Location;
 use Cheesegrits\FilamentGoogleMaps\Fields\Map;
+use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
 use Filament\Forms;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -19,6 +23,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Tables\Columns;
+use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Model;
 use SebastianBergmann\Type\TrueType;
 
@@ -40,22 +45,34 @@ class LocationResource extends Resource
                     ->autocompleteReverse(true)->hiddenOn('view'),
                 Textarea::make('address')
                     ->required(),
-                Section::make()
+                Section::make('Settings')
                     ->columns(2)
                     ->schema([
                         TextInput::make('qr_code')
                             ->label('QR code')
                             ->required()
                             ->columnSpan(1),
+                        Grid::make()
+                            ->columns(3)
+                            ->schema([
+                                Toggle::make('can_logtime')->label('Check in/ Check out')->default(true),
+                                Toggle::make('can_check')->label('Check point')->default(true),
+                                Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
+                            ])->columnSpan(2),
+                    ]),
+                Section::make()
+                    ->columns(1)
+                    ->schema([
                         Repeater::make('subLocations')
                             ->relationship()
+                            ->grid(3)
                             ->schema([
                                 TextInput::make('name')->required(),
-                                TextInput::make('qr_code')->required(),
-                                TextInput::make('business_id')->default(auth()->user()->business_id)->readOnly()->hidden(),
-                            ])
-                            ->columns(2)
-                            ->columnSpan(2)
+                                TextInput::make('qr_code')->required()->distinct(),
+                                Toggle::make('can_logtime')->label('Check in/ Check out')->default(true),
+                                Toggle::make('can_check')->label('Check point')->default(true),
+                                Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
+                            ]),
                     ])
 
             ]);
