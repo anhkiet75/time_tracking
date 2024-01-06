@@ -14,6 +14,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,7 +49,8 @@ class UserAdminResource extends Resource
                 TextColumn::make('name'),
                 TextColumn::make('email'),
                 TextColumn::make('birthdate'),
-                TextColumn::make('business.name')
+                TextColumn::make('business.name'),
+                IconColumn::make('is_admin')->boolean()
             ])
             ->filters([
                 //

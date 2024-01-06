@@ -12,12 +12,16 @@
         "cheesegrits/filament-google-maps": "3.0",
         "fakerphp/faker": "^1.23",
         "filament/filament": "^3.1",
+        "filament/forms": "3.1.35",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "livewire/livewire": "^3.0",
+        "livewire/volt": "^1.0"
     },
     "require-dev": {
+        "laravel/breeze": "^1.27",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",

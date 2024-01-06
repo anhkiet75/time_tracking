@@ -24,6 +24,11 @@ class Location extends Model
         return $this->belongsTo(Business::class);
     }
 
+    public function subLocations()
+    { 
+        return $this->hasMany(Location::class, 'parent_id');
+    }
+
     protected static function booted(): void
     {
         static::addGlobalScope('business', function (Builder $query) {
@@ -32,4 +37,5 @@ class Location extends Model
             }
         });
     }
+
 }

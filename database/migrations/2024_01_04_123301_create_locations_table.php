@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
-            $table->string('address');
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->string('address')->nullable();
+            $table->string('name')->nullable();
             $table->string('qr_code')->unique();
             $table->string('qr_image_path')->nullable();
             $table->float('lat')->nullable();
@@ -21,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('business_id');
             $table->foreign('business_id')->references('id')->on('businesses');
             $table->timestamps();
+            $table->foreign('parent_id')->references('id')->on('locations')->onDelete('cascade');
         });
     }
 

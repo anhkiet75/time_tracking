@@ -18,5 +18,20 @@ class DatabaseSeeder extends Seeder
             'email' => 'sadmin@gmail.com',
             'password' => bcrypt('123'),
         ]);
+
+        $bussines = new \App\Models\Business;
+        $bussines->name = 'Facebook';
+        $bussines->address = 'USA';
+        $bussines->phone_number = '123213';
+        $bussines->admin_id = 1;
+        $bussines->save();
+
+        \App\Models\User::factory()->create([
+            'name' => 'Facebook',
+            'email' => 'fb@gmail.com',
+            'is_admin' => 1,
+            'business_id' => 1,
+            'password' => bcrypt('123'),
+        ]);
     }
 }

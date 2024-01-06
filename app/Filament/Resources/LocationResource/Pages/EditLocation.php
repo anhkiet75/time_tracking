@@ -5,7 +5,6 @@ namespace App\Filament\Resources\LocationResource\Pages;
 use App\Filament\Resources\LocationResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Database\Eloquent\Model;
 
 class EditLocation extends EditRecord
 {
@@ -14,6 +13,7 @@ class EditLocation extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
         ];
     }
