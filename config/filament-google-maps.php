@@ -6,7 +6,7 @@ return [
      */
 
     'key' => env('GOOGLE_MAPS_API_KEY'),
-
+    'force-https' => env('FILAMENT_GOOGLE_MAPS_FORCE_HTTPS', true),
     /*
      | If you need to use both a browser key (restricted by HTTP Referrer) for use in the Javascript API on the
      | front end, and a server key (restricted by IP address) for server side API calls, you will need to set those
