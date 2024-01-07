@@ -28,7 +28,8 @@ class TimesheetsResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
-    protected static ?string $slug = 'checkins';
+    protected static ?string $slug = 'timesheet';
+    protected static ?string $pluralModelLabel = 'timesheet';
 
     public static function form(Form $form): Form
     {
@@ -57,6 +58,8 @@ class TimesheetsResource extends Resource
             ->columns([
                 TextColumn::make('checkin_time')->datetime('H:i m-d-Y'),
                 TextColumn::make('checkout_time')->datetime('H:i m-d-Y'),
+                TextColumn::make('checkpoint_time')->datetime('H:i m-d-Y')->label('Check time'),
+                TextColumn::make('location.name'),
                 TextColumn::make('log_time')
                     ->state(function (Checkin $record) {
                         if (!isset($record->checkin_time) || !isset($record->checkout_time))

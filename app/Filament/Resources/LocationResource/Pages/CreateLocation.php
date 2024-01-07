@@ -10,4 +10,11 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateLocation extends CreateRecord
 {
     protected static string $resource = LocationResource::class;
+
+    protected function handleRecordCreation(array $data): Location
+    {
+        $data['lat'] = $data['location']['lat'];
+        $data['lng'] = $data['location']['lng'];
+        return Location::create($data);
+    }
 }

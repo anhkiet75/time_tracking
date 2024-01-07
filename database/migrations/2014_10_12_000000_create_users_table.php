@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('birthdate')->nullable();
             $table->string('image_path')->nullable();
             $table->boolean('is_checkin')->default(false);
-            $table->boolean('allow_manual_entry')->default(false);
+            $table->boolean('allow_manual_entry')->default(true);
             $table->boolean('allow_qr_code_entry')->default(true);
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

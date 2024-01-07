@@ -60,8 +60,4 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsTo(User::class);
     }
-
-    // protected $dispatchesEvents = [
-    //     'creating' => UserCreating::class,
-    // ]
 }

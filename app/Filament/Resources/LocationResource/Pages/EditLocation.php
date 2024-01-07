@@ -17,4 +17,11 @@ class EditLocation extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['lat'] = $data['location']['lat'];
+        $data['lng'] = $data['location']['lng'];
+        return $data;
+    }
 }

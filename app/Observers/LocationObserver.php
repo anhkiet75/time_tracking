@@ -17,7 +17,7 @@ class LocationObserver
     /**
      * Handle the Location "creating" event.
      */
-    public function saving(Location $location): void
+    public function creating(Location $location): void
     {
         $location->business_id = auth()->user()->business_id;
     }

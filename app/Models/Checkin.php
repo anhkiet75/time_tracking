@@ -26,38 +26,57 @@ class Checkin extends Model
         return $this->belongsTo(Location::class);
     }
 
+    public function scopeGetAll(Builder $query): void
+    {
+        $query->where('user_id', auth()->user()->id);
+    }
+
     public function scopeThisWeek(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
     }
 
     public function scopeLastWeek(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->subWeek()->startOfWeek()->toDateString(), Carbon::now()->subWeek()->endOfWeek()->toDateString()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->subWeek()->startOfWeek()->toDateString(), Carbon::now()->subWeek()->endOfWeek()->toDateString()]);
     }
 
     public function scopeThisMonth(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()]);
     }
 
     public function scopeThisQuarter(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->startOfQuarter()->toDateString(), Carbon::now()->endOfQuarter()->toDateString()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->startOfQuarter()->toDateString(), Carbon::now()->endOfQuarter()->toDateString()]);
     }
 
     public function scopeLastQuarter(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->subQuarter()->startOfQuarter()->toDateString(), Carbon::now()->subQuarter()->endOfQuarter()->toDateString()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->subQuarter()->startOfQuarter()->toDateString(), Carbon::now()->subQuarter()->endOfQuarter()->toDateString()]);
     }
 
     public function scopeLastMonth(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->subMonth()->startOfMonth()->toDateString(), Carbon::now()->subMonth()->endOfMonth()->toDateString()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->subMonth()->startOfMonth()->toDateString(), Carbon::now()->subMonth()->endOfMonth()->toDateString()]);
     }
 
     public function scopeThisYear(Builder $query): void
     {
-        $query->whereBetween('checkin_time', [Carbon::now()->startOfYear()->toDateString(), Carbon::now()->endOfYear()->toDateString()]);
+        $query
+            ->where('user_id', auth()->user()->id)
+            ->whereBetween('checkin_time', [Carbon::now()->startOfYear()->toDateString(), Carbon::now()->endOfYear()->toDateString()]);
     }
 }

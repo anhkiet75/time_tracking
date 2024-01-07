@@ -20,6 +20,7 @@ use DateTime;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Illuminate\Support\HtmlString;
@@ -42,6 +43,12 @@ class CheckinLocation extends Component implements HasForms
         $this->form->fill();
     }
 
+    public static function circle_distance($lat1, $lon1, $lat2, $lon2)
+    {
+        $rad = M_PI / 180;
+        return acos(sin($lat2 * $rad) * sin($lat1 * $rad) + cos($lat2 * $rad) * cos($lat1 * $rad) * cos($lon2 * $rad - $lon1 * $rad)) * 6371; // Kilometers
+    }
+
     public function form(Form $form): Form
     {
         return $form
@@ -59,7 +66,24 @@ class CheckinLocation extends Component implements HasForms
                                 ->geolocateOnLoad(true, false)
                                 ->height(fn () => '100px')
                                 ->autocompleteReverse(true),
-                            TextInput::make('current_location')->required()->readOnly()
+                            TextInput::make('current_location')
+                                ->required()
+                                ->readOnly()
+                                ->rules([
+                                    fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+
+                                        if ($this->location->enable_gps) {
+                                            $lat = $this->location->lat;
+                                            $lng = $this->location->lng;
+                                            $current_lat = $get('location')["lat"];
+                                            $current_lng = $get('location')["lng"];
+                                            $distance = self::circle_distance($lat, $lng, $current_lat, $current_lng);
+                                            if ($distance > env("GOOGLE_MAPS_RADIUS", 1)) { // 1000m
+                                                $fail("You are not near the checkpoint {$distance}"  );
+                                            }
+                                        }
+                                    },
+                                ])
                         ]),
                     Wizard\Step::make('Authentication')
                         ->schema([
@@ -124,7 +148,7 @@ class CheckinLocation extends Component implements HasForms
             ->model(Checkin::class);
     }
 
-    public function create(): void
+    public function create()
     {
         $data = $this->form->getState();
         $data['location_id'] = $this->location->id;
@@ -132,7 +156,7 @@ class CheckinLocation extends Component implements HasForms
         $data['lat'] = $data['location']['lat'];
         $data['lng'] = $data['location']['lng'];
 
-        if ($this->user->is_checkin) {
+        if ($this->user->is_checkin && isset($this->data['checkout_time'])) {
             $checkin = Checkin::where('user_id', $this->user->id)->latest()->first();
             $checkin->checkout_time = $this->data['checkout_time'];
             $checkin->lat = $data['lat'];
@@ -142,19 +166,19 @@ class CheckinLocation extends Component implements HasForms
             $interval =  $checkin_time->diff($checkout_time);
             $checkin->log_time = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
             $checkin->save();
-        } else {
+        } else if (isset($this->data['checkin_time'])  || isset($this->data['checkpoint_time'])) {
             $record = Checkin::create($data);
             $this->form->model($record)->saveRelationships();
+            $this->user->is_check_pin_code = true;
+            $this->user->is_checkin = !$this->user->is_checkin;
+            $this->user->save();
         }
-
-        $this->user->is_checkin = !$this->user->is_checkin;
-        $this->user->is_check_pin_code = true;
-        $this->user->save();
 
         Notification::make()
             ->title('Saved successfully')
             ->info()
             ->send();
+        return redirect()->route('filament.app.resources.timesheet.index');
     }
 
     public function render(): View

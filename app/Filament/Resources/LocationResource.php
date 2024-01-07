@@ -45,6 +45,7 @@ class LocationResource extends Resource
                     ->autocompleteReverse(true)->hiddenOn('view'),
                 Textarea::make('address')
                     ->required(),
+                Textarea::make('name'),
                 Section::make('Settings')
                     ->columns(2)
                     ->schema([
@@ -83,6 +84,7 @@ class LocationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('qr_code')->label('QR code'),
+                TextColumn::make('name'),
                 TextColumn::make('address'),
             ])
             ->filters([

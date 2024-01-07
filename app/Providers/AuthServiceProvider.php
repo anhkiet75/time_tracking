@@ -3,6 +3,13 @@
 namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
+
+use App\Models\Checkin;
+use App\Models\Location;
+use App\Models\User;
+use App\Policies\CheckinPolicy;
+use App\Policies\LocationPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -13,7 +20,9 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        Location::class => LocationPolicy::class,
+        User::class => UserPolicy::class,
+        Checkin::class => CheckinPolicy::class
     ];
 
     /**
@@ -21,6 +30,5 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
     }
 }

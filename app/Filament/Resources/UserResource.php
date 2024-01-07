@@ -27,9 +27,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $slug = 'order';
+    protected static ?string $slug = 'user';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
 
     public static function form(Form $form): Form
     {
@@ -50,7 +50,8 @@ class UserResource extends Resource
                         Grid::make()
                             ->columns(1)
                             ->schema([
-                                Toggle::make('allow_manual_entry'),
+                                Toggle::make('allow_manual_entry')
+                                    ->default(true),
                                 Toggle::make('allow_qr_code_entry')
                                     ->label('Allow QR code entry')
                                     ->default(true),
