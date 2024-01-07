@@ -18,6 +18,7 @@ return new class extends Migration
             $table->boolean('check_pin_code')->default(true);
             $table->date('birthdate')->nullable();
             $table->string('image_path')->nullable();
+            $table->boolean('is_checkin')->default(false);
             $table->boolean('allow_manual_entry')->default(false);
             $table->boolean('allow_qr_code_entry')->default(true);
             $table->string('email')->unique();

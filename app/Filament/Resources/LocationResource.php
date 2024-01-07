@@ -65,7 +65,8 @@ class LocationResource extends Resource
                     ->schema([
                         Repeater::make('subLocations')
                             ->relationship()
-                            ->grid(3)
+                            ->grid(2)
+                            ->defaultItems(0)
                             ->schema([
                                 TextInput::make('name')->required(),
                                 TextInput::make('qr_code')->required()->distinct(),
@@ -74,7 +75,6 @@ class LocationResource extends Resource
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
                             ]),
                     ])
-
             ]);
     }
 

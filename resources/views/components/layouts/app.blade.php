@@ -19,6 +19,8 @@
     @filamentStyles
     @vite('resources/css/app.css')
 
+    @livewire('notifications')
+
     @filamentScripts
     @vite('resources/js/app.js')
 </head>
@@ -40,6 +42,7 @@
         <main>
             {{ $slot }}
         </main>
+
     </div>
 
 </body>

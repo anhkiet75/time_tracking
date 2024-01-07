@@ -9,6 +9,8 @@ use Faker\Provider\ar_EG\Text;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
@@ -30,15 +32,37 @@ class UserAdminResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')->required(),
-                TextInput::make('email')->email()->required(),
-                TextInput::make('password')->password()->required()->hiddenOn('edit'),
+                TextInput::make('name')
+                    ->required(),
+                TextInput::make('email')
+                    ->email()
+                    ->required(),
+                TextInput::make('password')
+                    ->password()
+                    ->required()
+                    ->hiddenOn('edit'),
                 DatePicker::make('birthdate'),
-                Toggle::make('allow_manual_entry'),
-                Toggle::make('allow_qr_code_entry')
-                    ->label('Allow QR code entry')
-                    ->default(true),
-                FileUpload::make('image_path')
+                Select::make('business_id')
+                    ->relationship('business', 'name')
+                    ->required(),
+                Grid::make()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('pin_code')
+                            ->length(6)
+                            ->numeric()
+                            ->required()
+                            ->columnSpan(1),
+                        Grid::make()
+                            ->columns(1)
+                            ->schema([
+                                Toggle::make('allow_manual_entry'),
+                                Toggle::make('allow_qr_code_entry')
+                                    ->label('Allow QR code entry')
+                                    ->default(true),
+                            ])->columnSpan(1),
+                    ]),
+                FileUpload::make('image_path')->label('image')
             ]);
     }
 

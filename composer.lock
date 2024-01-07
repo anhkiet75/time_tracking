@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "75225ff491548c076512476d096a6645",
+    "content-hash": "3977ea080036a6b2b6066d0147b84ded",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -282,16 +282,16 @@
         },
         {
             "name": "cheesegrits/filament-google-maps",
-            "version": "v3.0.0",
+            "version": "v3.0.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cheesegrits/filament-google-maps.git",
-                "reference": "a306caf81287606f22ad9fe30192a681c2d29c4c"
+                "reference": "ad706976fde514b3dab16ef4786f75d55d879c5c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cheesegrits/filament-google-maps/zipball/a306caf81287606f22ad9fe30192a681c2d29c4c",
-                "reference": "a306caf81287606f22ad9fe30192a681c2d29c4c",
+                "url": "https://api.github.com/repos/cheesegrits/filament-google-maps/zipball/ad706976fde514b3dab16ef4786f75d55d879c5c",
+                "reference": "ad706976fde514b3dab16ef4786f75d55d879c5c",
                 "shasum": ""
             },
             "require": {
@@ -345,9 +345,9 @@
             "homepage": "https://github.com/cheesegrits/filament-google-maps",
             "support": {
                 "issues": "https://github.com/cheesegrits/filament-google-maps/issues",
-                "source": "https://github.com/cheesegrits/filament-google-maps/tree/v3.0.0"
+                "source": "https://github.com/cheesegrits/filament-google-maps/tree/v3.0.12"
             },
-            "time": "2023-08-09T04:25:53+00:00"
+            "time": "2023-11-20T22:20:04+00:00"
         },
         {
             "name": "clue/stream-filter",

@@ -13,7 +13,9 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): User
     {
-        $data["business_id"] = auth()->user()->business_id;
+        if (!isset($data["business_id"])) {
+            $data["business_id"] = auth()->user()->business_id;
+        }
         return User::create($data);
     }
 }
