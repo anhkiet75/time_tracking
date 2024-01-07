@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Facebook',
             'email' => 'fb@gmail.com',
             'is_admin' => 1,
+            'pin_code' => '123456',
             'business_id' => 1,
             'password' => bcrypt('123'),
         ]);
@@ -38,6 +39,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'test',
             'email' => 'test@gmail.com',
             'is_admin' => 0,
+            'pin_code' => '123456',
             'business_id' => 1,
             'password' => bcrypt('123'),
         ]);

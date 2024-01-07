@@ -17,6 +17,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use TimWassenburg\FilamentTimesheets\FilamentTimesheetsPlugin;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -25,7 +26,7 @@ class AppPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('app')
-            ->path('app')
+            ->path('')
             ->login()
             ->colors([
                 'primary' => Color::Amber,

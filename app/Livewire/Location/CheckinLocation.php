@@ -16,6 +16,7 @@ use Filament\Forms\Form;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Closure;
+use DateTime;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
@@ -27,18 +28,18 @@ class CheckinLocation extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    public ?array $data = [];
+    public $data = null;
     public $location = null;
     public $user = null;
 
     public function mount($qr_code): void
     {
-        $this->form->fill();
         $this->location = Location::where('qr_code', $qr_code)->firstOrFail();
         $this->user = auth()->user();
         if ($this->user->is_checkin) {
             $this->data = Checkin::where('user_id', $this->user->id)->latest()->first()->toArray();
         }
+        $this->form->fill();
     }
 
     public function form(Form $form): Form
@@ -58,7 +59,7 @@ class CheckinLocation extends Component implements HasForms
                                 ->geolocateOnLoad(true, false)
                                 ->height(fn () => '100px')
                                 ->autocompleteReverse(true),
-                            TextInput::make('current_location')->readOnly()
+                            TextInput::make('current_location')->required()->readOnly()
                         ]),
                     Wizard\Step::make('Authentication')
                         ->schema([
@@ -125,15 +126,31 @@ class CheckinLocation extends Component implements HasForms
 
     public function create(): void
     {
+        $data = $this->form->getState();
+        $data['location_id'] = $this->location->id;
+        $data['user_id'] = $this->user->id;
+        $data['lat'] = $data['location']['lat'];
+        $data['lng'] = $data['location']['lng'];
+
+        if ($this->user->is_checkin) {
+            $checkin = Checkin::where('user_id', $this->user->id)->latest()->first();
+            $checkin->checkout_time = $this->data['checkout_time'];
+            $checkin->lat = $data['lat'];
+            $checkin->lng = $data['lng'];
+            $checkin_time = new DateTime($checkin->checkin_time);
+            $checkout_time = new DateTime($checkin->checkout_time);
+            $interval =  $checkin_time->diff($checkout_time);
+            $checkin->log_time = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
+            $checkin->save();
+        } else {
+            $record = Checkin::create($data);
+            $this->form->model($record)->saveRelationships();
+        }
+
         $this->user->is_checkin = !$this->user->is_checkin;
         $this->user->is_check_pin_code = true;
         $this->user->save();
 
-        $data = $this->form->getState();
-        $data['location_id'] = $this->location->id;
-        $data['user_id'] = $this->user->id;
-        $record = Checkin::create($data);
-        $this->form->model($record)->saveRelationships();
         Notification::make()
             ->title('Saved successfully')
             ->info()

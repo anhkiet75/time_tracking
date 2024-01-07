@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('pin_code', 10)->nullable();
             $table->boolean('is_check_pin_code')->default(false);
-            $table->boolean('check_pin_code')->default(true);
             $table->date('birthdate')->nullable();
             $table->string('image_path')->nullable();
             $table->boolean('is_checkin')->default(false);
