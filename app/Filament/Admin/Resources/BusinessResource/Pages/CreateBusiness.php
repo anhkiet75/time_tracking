@@ -24,6 +24,7 @@ class CreateBusiness extends CreateRecord
         $data["name"] = $data["username"];
         $data["is_admin"] = true;
         $data["business_id"] = $business->id;
+        $data["pin_code"] = $data["pin_code"];
         User::create($data);
         return $business;
     }

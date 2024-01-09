@@ -15,15 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::view('/', 'welcome');
-
+Route::get('/welcome', fn () => 'welcome');
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
-
-// Route::view('profile', 'profile')
-//     ->middleware(['auth'])
-//     ->name('profile');
-
-Route::get('/qr/{qr_code}', CheckinLocation::class)->middleware(['auth']);
+Route::get('/qr/{qr_code}', CheckinLocation::class);
 // require __DIR__ . '/auth.php';

@@ -16,6 +16,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -33,19 +34,39 @@ class LocationResource extends Resource
     protected static ?string $recordTitleAttribute = 'qr_code';
     protected static ?string $recordRouteKeyName = 'qr_code';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    protected static $lat = null;
+    protected static $lng = null;
     public static function form(Form $form): Form
     {
+        $location = $form->getRecord();
+        self::$lat = 10;
+        self::$lng = 10;
+        if (isset($location)) {
+            self::$lat = $location->lat;
+            self::$lng = $location->lng;
+        }
         return $form
             ->schema([
                 Map::make('location')
                     ->autocomplete(
                         fieldName: 'address',
                     )
-                    ->autocompleteReverse(true)->hiddenOn('view'),
+                    ->defaultLocation([self::$lat, self::$lng])
+                    ->autocompleteReverse(true)
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                        self::$lat = $state['lat'];
+                        self::$lng = $state['lng'];
+                    })
+                    ->hiddenOn('view'),
                 Textarea::make('address')
                     ->required(),
                 Textarea::make('name'),
+                TextInput::make('radius')
+                    ->numeric()
+                    ->default(1000)
+                    ->suffix('meters')
+                    ->required(),
                 Section::make('Settings')
                     ->columns(2)
                     ->schema([
@@ -74,7 +95,17 @@ class LocationResource extends Resource
                                 Toggle::make('can_logtime')->label('Check in/ Check out')->default(true),
                                 Toggle::make('can_check')->label('Check point')->default(true),
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
-                            ]),
+                            ])
+                            ->mutateRelationshipDataBeforeCreateUsing(function (array $data, callable $get): array {
+                                $data['lat'] = $get('location')['lat'];
+                                $data['lng'] = $get('location')['lng'];
+                                return $data;
+                            })
+                            ->mutateRelationshipDataBeforeSaveUsing(function (array $data, callable $get): array {
+                                $data['lat'] = $get('location')['lat'];
+                                $data['lng'] = $get('location')['lng'];
+                                return $data;
+                            }),
                     ])
             ]);
     }

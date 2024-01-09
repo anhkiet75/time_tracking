@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('address')->nullable();
+            $table->float('radius', 20, 10)->default(1000);
             $table->string('name')->nullable();
             $table->string('qr_code')->unique();
             $table->string('qr_image_path')->nullable();
-            $table->float('lat')->nullable();
-            $table->float('lng')->nullable();
+            $table->float('lat', 20, 10)->default(10)->nullable();
+            $table->float('lng', 20, 10)->default(10)->nullable();
             $table->boolean('can_logtime')->default(true);
             $table->boolean('can_check')->default(true);
             $table->boolean('enable_gps')->default(true);

@@ -19,8 +19,8 @@ return new class extends Migration
             $table->dateTime('checkpoint_time')->nullable();
             $table->integer('break_minutes')->nullable();
             $table->string('current_location')->nullable();
-            $table->float('lat')->nullable();
-            $table->float('lng')->nullable();
+            $table->float('lat', 20, 10)->default(10)->nullable();
+            $table->float('lng', 20, 10)->default(10)->nullable();
             $table->unsignedBigInteger('location_id');
             $table->foreign('location_id')->references('id')->on('locations');
             $table->unsignedBigInteger('user_id');

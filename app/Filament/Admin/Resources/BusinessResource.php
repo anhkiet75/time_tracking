@@ -39,6 +39,10 @@ class BusinessResource extends Resource
                         TextInput::make('username')
                             ->maxLength(255)
                             ->required(),
+                        TextInput::make('pin_code')
+                            ->length(6)
+                            ->numeric()
+                            ->required(),
                         TextInput::make('email')
                             ->email()
                             ->maxLength(255)

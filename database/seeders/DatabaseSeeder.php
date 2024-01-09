@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Facebook',
             'email' => 'fb@gmail.com',
             'is_admin' => 1,
-            'pin_code' => '123456',
+            'pin_code' => '000000',
             'business_id' => 1,
             'password' => bcrypt('123'),
         ]);

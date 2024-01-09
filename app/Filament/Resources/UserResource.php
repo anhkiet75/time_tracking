@@ -44,6 +44,7 @@ class UserResource extends Resource
                     ->schema([
                         TextInput::make('pin_code')
                             ->length(6)
+                            ->unique()
                             ->numeric()
                             ->required()
                             ->columnSpan(1),

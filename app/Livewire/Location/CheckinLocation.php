@@ -23,6 +23,8 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\HtmlString;
 
 class CheckinLocation extends Component implements HasForms
@@ -36,9 +38,8 @@ class CheckinLocation extends Component implements HasForms
     public function mount($qr_code): void
     {
         $this->location = Location::where('qr_code', $qr_code)->firstOrFail();
-        $this->user = auth()->user();
-        if ($this->user->is_checkin) {
-            $this->data = Checkin::where('user_id', $this->user->id)->latest()->first()->toArray();
+        if (isset(auth()->user()->is_checkin) && auth()->user()->is_checkin) {
+            $this->data = Checkin::where('user_id', auth()->user()->id)->latest()->first()->toArray();
         }
         $this->form->fill();
     }
@@ -54,6 +55,29 @@ class CheckinLocation extends Component implements HasForms
         return $form
             ->schema([
                 Wizard::make([
+                    Wizard\Step::make('Authentication')
+                        ->schema([
+                            TextInput::make('pin_code')
+                                ->length(6)
+                                ->required()
+                                ->rules([
+                                    function () {
+                                        return function (string $attribute, $value, Closure $fail) {
+                                            $user = User::where('pin_code', $value)
+                                                ->where('business_id', $this->location->business_id)
+                                                ->first();
+                                            if (empty($user)) {
+                                                $fail('The PIN CODE is invalid.');
+                                            } else {
+                                                Auth::login($user);
+                                                $user->use_pin_code = true;
+                                                $user->save();
+                                            }
+                                        };
+                                    },
+                                ])
+                        ])
+                        ->hidden(fn () => auth()->check()),
                     Wizard\Step::make('Allow GPS')
                         ->schema([
                             Map::make('location')
@@ -62,7 +86,7 @@ class CheckinLocation extends Component implements HasForms
                                 )
                                 ->geolocate()
                                 ->draggable(false)
-                                ->geolocateLabel('Get Location') // overrides the default label for geolocate button
+                                ->geolocateLabel('Get Location')
                                 ->geolocateOnLoad(true, false)
                                 ->height(fn () => '100px')
                                 ->autocompleteReverse(true),
@@ -71,35 +95,20 @@ class CheckinLocation extends Component implements HasForms
                                 ->readOnly()
                                 ->rules([
                                     fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
-
                                         if ($this->location->enable_gps) {
                                             $lat = $this->location->lat;
                                             $lng = $this->location->lng;
-                                            $current_lat = $get('location')["lat"];
-                                            $current_lng = $get('location')["lng"];
-                                            $distance = self::circle_distance($lat, $lng, $current_lat, $current_lng);
-                                            if ($distance > env("GOOGLE_MAPS_RADIUS", 1)) { // 1000m
-                                                $fail("You are not near the checkpoint {$distance}"  );
+                                            $radius = $this->location->radius;
+                                            $current_lat = $get('location')['lat'];
+                                            $current_lng = $get('location')['lng'];
+                                            $distance = round(self::circle_distance($lat, $lng, $current_lat, $current_lng), 3) * 1000; //meters
+                                            if ($distance > $radius) {
+                                                $fail("You are not near the checkpoint ( {$distance}  meters far away)");
                                             }
                                         }
                                     },
                                 ])
                         ]),
-                    Wizard\Step::make('Authentication')
-                        ->schema([
-                            TextInput::make('pin_code')
-                                ->required()
-                                ->rules([
-                                    function () {
-                                        return function (string $attribute, $value, Closure $fail) {
-                                            if (empty($value) ||  $value !==  auth()->user()->pin_code) {
-                                                $fail('The PIN CODE is invalid.');
-                                            }
-                                        };
-                                    },
-                                ])
-                        ])
-                        ->hidden(fn () => auth()->user()->is_check_pin_code),
                     Wizard\Step::make('Check in/Check out')
                         ->schema([
                             Grid::make()
@@ -115,7 +124,7 @@ class CheckinLocation extends Component implements HasForms
                                                     $set('checkin_time', date('Y-m-d H:i:s'));
                                                 })
                                         )
-                                        ->hidden(fn () => $this->user->is_checkin == true),
+                                        ->hidden(fn () => auth()->check() && auth()->user()->is_checkin == true),
                                     TextInput::make('checkout_time')
                                         ->readOnly()
                                         ->suffixAction(
@@ -126,7 +135,7 @@ class CheckinLocation extends Component implements HasForms
                                                     $set('checkout_time', date('Y-m-d H:i:s'));
                                                 })
                                         )
-                                        ->hidden(fn () => $this->user->is_checkin == false),
+                                        ->hidden(fn () => auth()->check() && auth()->user()->is_checkin ==  false),
                                 ])->hidden(fn () => !$this->location->can_logtime),
                             TextInput::make('checkpoint_time')
                                 ->readOnly()
@@ -139,9 +148,10 @@ class CheckinLocation extends Component implements HasForms
                                         })
                                 )
                                 ->hidden(fn () => $this->location->can_check == false)
-                        ])->hidden(fn () => !$this->user->allow_qr_code_entry)
+                        ])
+                        ->hidden(fn () => auth()->check() && !auth()->user()->allow_qr_code_entry)
                 ])
-                    ->persistStepInQueryString()
+                    // ->persistStepInQueryString()
                     ->submitAction(new HtmlString('<button style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);" type="submit" class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 dark:bg-custom-500 dark:hover:bg-custom-400 focus-visible:ring-custom-500/50 dark:focus-visible:ring-custom-400/50 fi-ac-btn-action">Submit</button>'))
             ])
             ->statePath('data')
@@ -152,12 +162,12 @@ class CheckinLocation extends Component implements HasForms
     {
         $data = $this->form->getState();
         $data['location_id'] = $this->location->id;
-        $data['user_id'] = $this->user->id;
+        $data['user_id'] = auth()->user()->id;
         $data['lat'] = $data['location']['lat'];
         $data['lng'] = $data['location']['lng'];
 
-        if ($this->user->is_checkin && isset($this->data['checkout_time'])) {
-            $checkin = Checkin::where('user_id', $this->user->id)->latest()->first();
+        if (auth()->user()->is_checkin && isset($this->data['checkout_time'])) {
+            $checkin = Checkin::where('user_id', auth()->user()->id)->latest()->first();
             $checkin->checkout_time = $this->data['checkout_time'];
             $checkin->lat = $data['lat'];
             $checkin->lng = $data['lng'];
@@ -169,16 +179,17 @@ class CheckinLocation extends Component implements HasForms
         } else if (isset($this->data['checkin_time'])  || isset($this->data['checkpoint_time'])) {
             $record = Checkin::create($data);
             $this->form->model($record)->saveRelationships();
-            $this->user->is_check_pin_code = true;
-            $this->user->is_checkin = !$this->user->is_checkin;
-            $this->user->save();
+            $user = User::find(auth()->user()->id);
+            $user->is_check_pin_code = true;
+            $user->is_checkin = !$user->is_checkin;
+            $user->save();
         }
 
         Notification::make()
             ->title('Saved successfully')
             ->info()
             ->send();
-        return redirect()->route('filament.app.resources.timesheet.index');
+        return redirect()->route('dashboard');
     }
 
     public function render(): View
