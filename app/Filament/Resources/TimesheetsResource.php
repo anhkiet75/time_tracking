@@ -38,17 +38,18 @@ class TimesheetsResource extends Resource
                 DateTimePicker::make('checkin_time')
                     ->seconds(false)
                     ->native(false)
-                    ->maxDate(now())
-                    ->beforeOrEqual('checkout_time'),
+                    ->maxDate(now()),
                 DateTimePicker::make('checkout_time')
                     ->seconds(false)
                     ->native(false)
-                    ->maxDate(now()),
+                    ->maxDate(now())
+                    ->afterOrEqual('checkin_time'),
                 Select::make('location_id')
                     ->relationship('location', 'address')
                     ->required()
                     ->hiddenOn('edit'),
-                TextInput::make('log_time')->readOnly()->hiddenOn('create')
+                TextInput::make('log_time')->readOnly()->hiddenOn('create'),
+                TextInput::make('break_time')->numeric()
             ]);
     }
 
@@ -59,6 +60,7 @@ class TimesheetsResource extends Resource
                 TextColumn::make('checkin_time')->datetime('H:i m-d-Y'),
                 TextColumn::make('checkout_time')->datetime('H:i m-d-Y'),
                 TextColumn::make('checkpoint_time')->datetime('H:i m-d-Y')->label('Check time'),
+                TextColumn::make('break_time'),
                 TextColumn::make('location.name'),
                 TextColumn::make('log_time')
                     ->state(function (Checkin $record) {

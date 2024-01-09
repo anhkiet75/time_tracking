@@ -17,7 +17,7 @@ return new class extends Migration
             $table->dateTime('checkout_time')->nullable();
             $table->integer('log_time')->default(0)->comment('time diff between check in time and check out time in minutes');
             $table->dateTime('checkpoint_time')->nullable();
-            $table->integer('break_minutes')->nullable();
+            $table->integer('break_time')->nullable();
             $table->string('current_location')->nullable();
             $table->float('lat', 20, 10)->default(10)->nullable();
             $table->float('lng', 20, 10)->default(10)->nullable();
