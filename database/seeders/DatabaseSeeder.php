@@ -23,8 +23,15 @@ class DatabaseSeeder extends Seeder
         $bussines->name = 'Facebook';
         $bussines->address = 'USA';
         $bussines->phone_number = '123213';
+        $bussines->business_range = '1-100';
         $bussines->admin_id = 1;
         $bussines->save();
+
+        $range = new \App\Models\BusinessQRCodeRange;
+        $range->business_id = 1;
+        $range->start_range = 1;
+        $range->end_range = 100;
+        $range->save();
 
         \App\Models\User::factory()->create([
             'name' => 'Facebook',

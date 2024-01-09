@@ -2,14 +2,19 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Helper\BusinessHelper;
 use App\Filament\Resources\LocationResource\Pages;
 use App\Filament\Resources\LocationResource\RelationManagers;
+use App\Models\Business;
 use App\Models\Location;
+use App\Models\User;
 use Cheesegrits\FilamentGoogleMaps\Fields\Map;
 use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
@@ -26,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Tables\Columns;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use SebastianBergmann\Type\TrueType;
 
 class LocationResource extends Resource
@@ -36,6 +42,7 @@ class LocationResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static $lat = null;
     protected static $lng = null;
+
     public static function form(Form $form): Form
     {
         $location = $form->getRecord();
@@ -73,7 +80,19 @@ class LocationResource extends Resource
                         TextInput::make('qr_code')
                             ->label('QR code')
                             ->required()
+                            ->rules([
+                                function () {
+                                    return function (string $attribute, $value, Closure $fail) {
+                                        if (!BusinessHelper::validateRangeInternal(auth()->user()->business->id, $value)) {
+                                            $fail('The QR code is invalid.');
+                                        }
+                                    };
+                                },
+                            ])
                             ->columnSpan(1),
+                        Placeholder::make('Business')
+                            ->label('Business QR code ranges')
+                            ->content(fn () => Auth::user()->business->business_range),
                         Grid::make()
                             ->columns(3)
                             ->schema([
@@ -91,7 +110,16 @@ class LocationResource extends Resource
                             ->defaultItems(0)
                             ->schema([
                                 TextInput::make('name')->required(),
-                                TextInput::make('qr_code')->required()->distinct(),
+                                TextInput::make('qr_code')->required()->distinct()
+                                    ->rules([
+                                        function () {
+                                            return function (string $attribute, $value, Closure $fail) {
+                                                if (!BusinessHelper::validateRangeInternal(auth()->user()->business->id, $value)) {
+                                                    $fail('The QR code is invalid.');
+                                                }
+                                            };
+                                        },
+                                    ]),
                                 Toggle::make('can_logtime')->label('Check in/ Check out')->default(true),
                                 Toggle::make('can_check')->label('Check point')->default(true),
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
@@ -99,11 +127,13 @@ class LocationResource extends Resource
                             ->mutateRelationshipDataBeforeCreateUsing(function (array $data, callable $get): array {
                                 $data['lat'] = $get('location')['lat'];
                                 $data['lng'] = $get('location')['lng'];
+                                $data['radius'] = $get('radius');
                                 return $data;
                             })
                             ->mutateRelationshipDataBeforeSaveUsing(function (array $data, callable $get): array {
                                 $data['lat'] = $get('location')['lat'];
                                 $data['lng'] = $get('location')['lng'];
+                                $data['radius'] = $get('radius');
                                 return $data;
                             }),
                     ])

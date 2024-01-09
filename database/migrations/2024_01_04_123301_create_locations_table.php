@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->float('radius', 20, 10)->default(1000);
             $table->string('name')->nullable();
-            $table->string('qr_code')->unique();
+            $table->integer('qr_code')->unique();
             $table->string('qr_image_path')->nullable();
             $table->float('lat', 20, 10)->default(10)->nullable();
             $table->float('lng', 20, 10)->default(10)->nullable();

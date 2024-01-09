@@ -4,7 +4,9 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\BusinessResource\Pages;
 use App\Filament\Admin\Resources\BusinessResource\RelationManagers;
+use App\Filament\Helper\BusinessHelper;
 use App\Models\Business;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\TextInput;
@@ -34,6 +36,22 @@ class BusinessResource extends Resource
                     ->maxLength(255),
                 TextInput::make('phone_number')
                     ->maxLength(20),
+                TextInput::make('business_range')
+                    ->label('Business QR code range')
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->hintIcon('heroicon-m-question-mark-circle', tooltip: 'Example: 100-200,200-300')
+                    ->required()
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, Closure $fail) {
+                                $qr_code_ranges = BusinessHelper::convertInputToRangesArray($value);
+                                if (!BusinessHelper::validateRange($qr_code_ranges)) {
+                                    $fail('The :attribute is invalid.');
+                                }
+                            };
+                        },
+                    ]),
                 Fieldset::make('Admin account')
                     ->schema([
                         TextInput::make('username')

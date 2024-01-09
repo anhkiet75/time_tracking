@@ -27,7 +27,7 @@ return new class extends Migration
             $table->boolean('is_admin')->default(false);
             $table->boolean('use_pin_code')->default(false);
             $table->unsignedBigInteger('business_id');
-            $table->foreign('business_id')->references('id')->on('businesses');
+            $table->foreign('business_id')->references('id')->on('businesses')->onDelete('cascade');
             $table->rememberToken();
             $table->timestamps();
         });
