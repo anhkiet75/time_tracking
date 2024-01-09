@@ -109,50 +109,53 @@ class CheckinLocation extends Component implements HasForms
                                     },
                                 ])
                         ]),
-                    Wizard\Step::make('Check in/Check out')
+                    Wizard\Step::make('Check')
+                        ->label(fn (Get $get) => $get('checkin_time') ? 'Check out' : 'Check in')
                         ->schema([
                             Grid::make()
                                 ->columns(1)
                                 ->schema([
                                     TextInput::make('checkin_time')
+                                        ->label('Check in at location')
                                         ->readOnly()
                                         ->suffixAction(
                                             Action::make('setCheckin')
                                                 ->icon('heroicon-o-check-badge')
-                                                ->requiresConfirmation()
                                                 ->action(function (Set $set, $state) {
                                                     $set('checkin_time', date('Y-m-d H:i:s'));
+                                                    $this->create();
                                                 })
                                         )
                                         ->hidden(fn () => auth()->check() && auth()->user()->is_checkin == true),
                                     TextInput::make('checkout_time')
+                                        ->label('Check out')
                                         ->readOnly()
                                         ->suffixAction(
                                             Action::make('setCheckout')
                                                 ->icon('heroicon-o-check-badge')
-                                                ->requiresConfirmation()
                                                 ->action(function (Set $set, $state) {
                                                     $set('checkout_time', date('Y-m-d H:i:s'));
+                                                    $this->create();
                                                 })
                                         )
                                         ->hidden(fn () => auth()->check() && auth()->user()->is_checkin ==  false),
                                 ])->hidden(fn () => !$this->location->can_logtime),
                             TextInput::make('checkpoint_time')
+                                ->label('Checkpoint checked')
                                 ->readOnly()
                                 ->suffixAction(
                                     Action::make('setCheck')
                                         ->icon('heroicon-o-check-badge')
-                                        ->requiresConfirmation()
                                         ->action(function (Set $set, $state) {
                                             $set('checkpoint_time', date('Y-m-d H:i:s'));
+                                            $this->create();
                                         })
                                 )
                                 ->hidden(fn () => $this->location->can_check == false)
                         ])
                         ->hidden(fn () => auth()->check() && !auth()->user()->allow_qr_code_entry)
                 ])
-                    // ->persistStepInQueryString()
-                    ->submitAction(new HtmlString('<button style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);" type="submit" class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 dark:bg-custom-500 dark:hover:bg-custom-400 focus-visible:ring-custom-500/50 dark:focus-visible:ring-custom-400/50 fi-ac-btn-action">Submit</button>'))
+                // ->submitAction(new HtmlString('<button style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);" type="submit" class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 dark:bg-custom-500 dark:hover:bg-custom-400 focus-visible:ring-custom-500/50 dark:focus-visible:ring-custom-400/50 fi-ac-btn-action">Submit</button>'))
             ])
             ->statePath('data')
             ->model(Checkin::class);
@@ -176,20 +179,41 @@ class CheckinLocation extends Component implements HasForms
             $interval =  $checkin_time->diff($checkout_time);
             $checkin->log_time = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
             $checkin->save();
-        } else if (isset($this->data['checkin_time'])  || isset($this->data['checkpoint_time'])) {
+            $user = User::find(auth()->user()->id);
+            $user->is_checkin = !$user->is_checkin;
+            $user->save();
+            Notification::make()
+                ->title('Check out successfully')
+                ->info()
+                ->send();
+        } else if (isset($this->data['checkin_time'])) {
             $record = Checkin::create($data);
             $this->form->model($record)->saveRelationships();
             $user = User::find(auth()->user()->id);
             $user->is_check_pin_code = true;
             $user->is_checkin = !$user->is_checkin;
             $user->save();
+            Notification::make()
+                ->title('Check in successfully')
+                ->info()
+                ->send();
         }
 
-        Notification::make()
-            ->title('Saved successfully')
-            ->info()
-            ->send();
-        return redirect()->route('dashboard');
+        if (isset($this->data['checkpoint_time'])) {
+            $checkin = Checkin::where('user_id', auth()->user()->id)
+                ->where('location_id', $this->location->id)
+                ->latest()->first();
+            if (is_null($checkin)) {
+                $checkin = new Checkin;
+            }
+            $checkin->checkpoint_time = $this->data['checkpoint_time'];
+            $checkin->save();
+            Notification::make()
+                ->title('Checkpoint checked successfully')
+                ->info()
+                ->send();
+        }
+        $this->js('window.location.reload()');
     }
 
     public function render(): View
