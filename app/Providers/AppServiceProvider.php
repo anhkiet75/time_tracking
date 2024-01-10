@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Filament\Resources\LocationResource\Pages\ListLocations;
+use App\Models\Location;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as ContractsLogoutResponse;
+use Filament\Resources\Pages\ListRecords;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**

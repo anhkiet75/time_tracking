@@ -34,6 +34,7 @@ class Location extends Model
         static::addGlobalScope('business', function (Builder $query) {
             if (auth()->check()) {
                 $query->where('business_id', auth()->user()->business_id);
+                // $query->orderByRaw('COALESCE(id)', 'ASC')->get();
             }
         });
     }

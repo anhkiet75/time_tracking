@@ -14,6 +14,7 @@ use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
@@ -29,7 +30,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Tables\Columns;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use SebastianBergmann\Type\TrueType;
@@ -40,12 +43,18 @@ class LocationResource extends Resource
     protected static ?string $recordTitleAttribute = 'qr_code';
     protected static ?string $recordRouteKeyName = 'qr_code';
     protected static ?string $navigationIcon = 'heroicon-o-map-pin';
+    protected ?string $heading = 'Custom Page Heading';
     protected static $lat = null;
     protected static $lng = null;
 
     public static function form(Form $form): Form
     {
         $location = $form->getRecord();
+        $business = Business::find(auth()->user()->business_id);
+        $number_of_locations = $business->locations->count();
+        $max_allow_locations = isset($business->max_allow_locations)
+            ? ($business->max_allow_locations - $number_of_locations - (isset($location) ? 0 : 1))
+            : 1000  - 1;
         self::$lat = 10;
         self::$lng = 10;
         if (isset($location)) {
@@ -68,7 +77,7 @@ class LocationResource extends Resource
                     ->hiddenOn('view'),
                 Textarea::make('address')
                     ->required(),
-                Textarea::make('name'),
+                Textarea::make('name')->maxLength(255)->required(),
                 TextInput::make('radius')
                     ->numeric()
                     ->default(1000)
@@ -81,6 +90,9 @@ class LocationResource extends Resource
                             ->label('QR code')
                             ->required()
                             ->unique(ignoreRecord: true)
+                            ->validationMessages([
+                                'unique' => 'This QR is not valid, use a QR that is assigned to your location.',
+                            ])
                             ->rules([
                                 function () {
                                     return function (string $attribute, $value, Closure $fail) {
@@ -111,7 +123,12 @@ class LocationResource extends Resource
                             ->defaultItems(0)
                             ->schema([
                                 TextInput::make('name')->required(),
-                                TextInput::make('qr_code')->required()->unique(ignoreRecord: true)
+                                TextInput::make('qr_code')
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->validationMessages([
+                                        'unique' => 'This QR is not valid, use a QR that is assigned to your location.',
+                                    ])
                                     ->rules([
                                         function () {
                                             return function (string $attribute, $value, Closure $fail) {
@@ -124,6 +141,7 @@ class LocationResource extends Resource
                                 Toggle::make('can_logtime')->label('Check log time')->default(true),
                                 Toggle::make('can_check')->label('Check point')->default(true),
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
+                                Hidden::make('is_sub_location')->default(true)
                             ])
                             ->mutateRelationshipDataBeforeCreateUsing(function (array $data, callable $get): array {
                                 $data['lat'] = $get('location')['lat'];
@@ -136,7 +154,8 @@ class LocationResource extends Resource
                                 $data['lng'] = $get('location')['lng'];
                                 $data['radius'] = $get('radius');
                                 return $data;
-                            }),
+                            })
+                            ->maxItems($max_allow_locations),
                     ])
             ]);
     }
@@ -145,12 +164,20 @@ class LocationResource extends Resource
     {
         return $table
             ->columns([
+                IconColumn::make('is_sub_location')
+                    ->boolean()
+                    ->trueIcon('heroicon-s-arrow-right')
+                    ->falseIcon('heroicon-m-list-bullet')
+                    ->size(IconColumn\IconColumnSize::Small)
+                    ->trueColor('warning')
+                    ->falseColor('info')
+                    ->label(''),
                 TextColumn::make('qr_code')
                     ->label('QR code')
                     ->sortable(),
                 TextColumn::make('name'),
                 TextColumn::make('address')
-                    ->limit(50)
+                    ->limit(40)
                     ->searchable(),
                 ToggleColumn::make('can_logtime')
                     ->sortable()
@@ -163,7 +190,8 @@ class LocationResource extends Resource
                     ->label('Allow add break time')
             ])
             ->filters([
-                //
+                Filter::make('Sub location')
+                    ->query(fn (Builder $query): Builder => $query->where('is_sub_location', true)),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

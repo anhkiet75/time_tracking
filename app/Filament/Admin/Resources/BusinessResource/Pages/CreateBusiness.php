@@ -27,13 +27,7 @@ class CreateBusiness extends CreateRecord
         $qr_code_ranges = BusinessHelper::convertInputToRangesArray($data['business_range']);
         $business = Business::create($data);
         BusinessHelper::createQRCodeRanges($business->id, $qr_code_ranges);
-
-        $data["name"] = $data["username"];
-        $data["is_admin"] = true;
-        $data["business_id"] = $business->id;
-        $data["pin_code"] = $data["pin_code"];
-        User::create($data);
-
+        
         return $business;
     }
 

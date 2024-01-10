@@ -29,10 +29,6 @@ class EditBusiness extends EditRecord
 
         BusinessHelper::createQRCodeRanges($model->id, $qr_code_ranges);
         $model->update($data);
-        Notification::make()
-            ->title('Updated.')
-            ->info()
-            ->send();
         return $model;
     }
 }

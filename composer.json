@@ -18,7 +18,9 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "livewire/livewire": "^3.0",
-        "livewire/volt": "^1.0"
+        "livewire/volt": "^1.0",
+        "malzariey/filament-daterangepicker-filter": "^2.3",
+        "webbingbrasil/filament-advancedfilter": "3.0"
     },
     "require-dev": {
         "laravel/breeze": "^1.27",

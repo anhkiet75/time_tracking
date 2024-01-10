@@ -10,19 +10,26 @@ use App\Models\Timesheets;
 use DateTime;
 use Filament\Forms;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
+use Webbingbrasil\FilamentAdvancedFilter\Filters\BooleanFilter;
+use Webbingbrasil\FilamentAdvancedFilter\Filters\DateFilter;
 
 class TimesheetsResource extends Resource
 {
@@ -37,19 +44,23 @@ class TimesheetsResource extends Resource
     {
         return $form
             ->schema([
-                DateTimePicker::make('checkin_time')
-                    ->seconds(false)
-                    ->native(false)
-                    ->maxDate(now()),
-                DateTimePicker::make('checkout_time')
-                    ->seconds(false)
-                    ->native(false)
-                    ->maxDate(now())
-                    ->afterOrEqual('checkin_time'),
                 Select::make('location_id')
-                    ->relationship('location', 'address')
+                    ->relationship('location', 'name')
                     ->required()
                     ->hiddenOn('edit'),
+                Grid::make()
+                    ->columnSpan(2)
+                    ->schema([
+                        DateTimePicker::make('checkin_time')
+                            ->seconds(false)
+                            ->native(false)
+                            ->maxDate(now()),
+                        DateTimePicker::make('checkout_time')
+                            ->seconds(false)
+                            ->native(false)
+                            ->maxDate(now())
+                            ->afterOrEqual('checkin_time'),
+                    ]),
                 TextInput::make('log_time')->readOnly()->hiddenOn('create'),
                 TextInput::make('break_time')->numeric()
                     ->visibleOn('edit')
@@ -61,6 +72,10 @@ class TimesheetsResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('user.name')
+                    ->sortable(),
+                TextColumn::make('location.parent_id')
+                    ->sortable(),
                 TextColumn::make('checkin_time')
                     ->sortable()
                     ->datetime('H:i m-d-Y'),
@@ -73,8 +88,8 @@ class TimesheetsResource extends Resource
                     ->label('Check time'),
                 TextColumn::make('break_time'),
                 TextColumn::make('location.name')
-                ->sortable()
-                ->searchable(),
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('log_time')
                     ->state(function (Checkin $record) {
                         if (!isset($record->checkin_time) || !isset($record->checkout_time))
@@ -91,9 +106,14 @@ class TimesheetsResource extends Resource
             ])
             ->defaultSort('id', 'desc')
             ->filters([
-                //
+                Filter::make('Sub location')
+                    ->query(fn (Builder $query): Builder => $query->where('is_sub_location', true)),
+                BooleanFilter::make('log_time'),
+                DateFilter::make('checkin_time'),
+                DateRangeFilter::make('checkin_time')->label('Date range')
             ])
             ->actions([
+                Action::make('test'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

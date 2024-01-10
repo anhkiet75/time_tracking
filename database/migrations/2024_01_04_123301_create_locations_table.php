@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('address')->nullable();
             $table->float('radius', 20, 10)->default(1000);
+            $table->boolean('is_sub_location')->default(false);
             $table->string('name')->nullable();
             $table->integer('qr_code')->unique();
             $table->string('qr_image_path')->nullable();
