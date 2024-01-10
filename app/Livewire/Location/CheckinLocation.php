@@ -150,7 +150,7 @@ class CheckinLocation extends Component implements HasForms
                                                     $this->setBreakTime();
                                                 })
                                         )
-                                        ->hidden(fn () => auth()->check() && auth()->user()->is_checkin ==  false),
+                                        ->hidden(fn () => !$this->location->can_break),
                                 ])->hidden(fn () => !$this->location->can_logtime),
                             TextInput::make('checkpoint_time')
                                 ->label('Checkpoint checked')
@@ -254,61 +254,6 @@ class CheckinLocation extends Component implements HasForms
             ->send();
         return redirect(request()->header('Referer'));
     }
-
-    // public function create()
-    // {
-    //     $data = $this->form->getState();
-    //     $data['location_id'] = $this->location->id;
-    //     $data['user_id'] = auth()->user()->id;
-    //     $data['lat'] = $data['location']['lat'];
-    //     $data['lng'] = $data['location']['lng'];
-
-    //     if (auth()->user()->is_checkin && isset($this->data['checkout_time'])) {
-    //         $checkin = Checkin::where('user_id', auth()->user()->id)->latest()->first();
-    //         $checkin->checkout_time = $this->data['checkout_time'];
-    //         $checkin->lat = $data['lat'];
-    //         $checkin->lng = $data['lng'];
-    //         $checkin_time = new DateTime($checkin->checkin_time);
-    //         $checkout_time = new DateTime($checkin->checkout_time);
-    //         $interval =  $checkin_time->diff($checkout_time);
-    //         $checkin->log_time = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
-    //         $checkin->save();
-    //         $user = User::find(auth()->user()->id);
-    //         $user->is_checkin = !$user->is_checkin;
-    //         $user->save();
-    //         Notification::make()
-    //             ->title('Check out successfully')
-    //             ->info()
-    //             ->send();
-    //     } else if (isset($this->data['checkin_time'])) {
-    //         $record = Checkin::create($data);
-    //         $this->form->model($record)->saveRelationships();
-    //         $user = User::find(auth()->user()->id);
-    //         $user->is_check_pin_code = true;
-    //         $user->is_checkin = !$user->is_checkin;
-    //         $user->save();
-    //         Notification::make()
-    //             ->title('Check in successfully')
-    //             ->info()
-    //             ->send();
-    //     }
-
-    //     if (isset($this->data['checkpoint_time'])) {
-    //         $checkin = Checkin::where('user_id', auth()->user()->id)
-    //             ->where('location_id', $this->location->id)
-    //             ->latest()->first();
-    //         if (is_null($checkin)) {
-    //             $checkin = new Checkin;
-    //         }
-    //         $checkin->checkpoint_time = $this->data['checkpoint_time'];
-    //         $checkin->save();
-    //         Notification::make()
-    //             ->title('Checkpoint checked successfully')
-    //             ->info()
-    //             ->send();
-    //     }
-    //     $this->js('window.location.reload()');
-    // }
 
     public function render(): View
     {

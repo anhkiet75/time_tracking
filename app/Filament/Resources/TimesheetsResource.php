@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TimesheetsResource\Pages;
 use App\Filament\Resources\TimesheetsResource\RelationManagers;
 use App\Models\Checkin;
+use App\Models\Location;
 use App\Models\Timesheets;
 use DateTime;
 use Filament\Forms;
@@ -20,6 +21,7 @@ use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TimesheetsResource extends Resource
@@ -50,6 +52,8 @@ class TimesheetsResource extends Resource
                     ->hiddenOn('edit'),
                 TextInput::make('log_time')->readOnly()->hiddenOn('create'),
                 TextInput::make('break_time')->numeric()
+                    ->visibleOn('edit')
+                    ->hidden(fn (?Model $record) =>  isset($record->location) && !$record->location->can_break)
             ]);
     }
 
