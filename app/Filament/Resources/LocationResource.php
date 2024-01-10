@@ -97,7 +97,7 @@ class LocationResource extends Resource
                             ->columns(2)
                             ->schema([
                                 Toggle::make('can_logtime')->label('Allow check in/check out')->default(true),
-                                Toggle::make('can_check')->label('Allow check checkpoint')->default(true),
+                                // Toggle::make('can_check')->label('Allow check checkpoint')->default(true),
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
                                 Toggle::make('can_break')->label('Allow add break time')->default(true)
                             ])->columnSpan(2),

@@ -163,7 +163,7 @@ class CheckinLocation extends Component implements HasForms
                                             $this->setCheckpoint();
                                         })
                                 )
-                                ->hidden(fn () => !$this->location->can_check)
+                                ->hidden(fn () => $this->location->can_logtime)
                         ])
                         ->hidden(fn () => auth()->check() && !auth()->user()->allow_qr_code_entry)
                 ])
