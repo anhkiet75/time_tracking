@@ -6,10 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Filament\Panel;
+use Filament\Models\Contracts\FilamentUser;
 
-class SuperAdmin extends Authenticatable
+class SuperAdmin extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
 
     protected $fillable = [
         'name',
