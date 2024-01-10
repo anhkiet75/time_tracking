@@ -39,7 +39,7 @@ class LocationResource extends Resource
     protected static ?string $model = Location::class;
     protected static ?string $recordTitleAttribute = 'qr_code';
     protected static ?string $recordRouteKeyName = 'qr_code';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-map-pin';
     protected static $lat = null;
     protected static $lng = null;
 
@@ -80,6 +80,7 @@ class LocationResource extends Resource
                         TextInput::make('qr_code')
                             ->label('QR code')
                             ->required()
+                            ->unique(ignoreRecord: true)
                             ->rules([
                                 function () {
                                     return function (string $attribute, $value, Closure $fail) {
@@ -96,8 +97,7 @@ class LocationResource extends Resource
                         Grid::make()
                             ->columns(2)
                             ->schema([
-                                Toggle::make('can_logtime')->label('Allow check in/check out')->default(true),
-                                // Toggle::make('can_check')->label('Allow check checkpoint')->default(true),
+                                Toggle::make('can_logtime')->label('Allow log time')->default(true),
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
                                 Toggle::make('can_break')->label('Allow add break time')->default(true)
                             ])->columnSpan(2),
@@ -111,7 +111,7 @@ class LocationResource extends Resource
                             ->defaultItems(0)
                             ->schema([
                                 TextInput::make('name')->required(),
-                                TextInput::make('qr_code')->required()->distinct()
+                                TextInput::make('qr_code')->required()->unique(ignoreRecord: true)
                                     ->rules([
                                         function () {
                                             return function (string $attribute, $value, Closure $fail) {
@@ -121,7 +121,7 @@ class LocationResource extends Resource
                                             };
                                         },
                                     ]),
-                                Toggle::make('can_logtime')->label('Check in/ Check out')->default(true),
+                                Toggle::make('can_logtime')->label('Check log time')->default(true),
                                 Toggle::make('can_check')->label('Check point')->default(true),
                                 Toggle::make('enable_gps')->label('Forces enable GPS')->default(true),
                             ])
@@ -145,16 +145,28 @@ class LocationResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('qr_code')->label('QR code'),
+                TextColumn::make('qr_code')
+                    ->label('QR code')
+                    ->sortable(),
                 TextColumn::make('name'),
-                TextColumn::make('address'),
+                TextColumn::make('address')
+                    ->limit(50)
+                    ->searchable(),
+                ToggleColumn::make('can_logtime')
+                    ->sortable()
+                    ->label('Allow log time'),
+                ToggleColumn::make('enable_gps')
+                    ->sortable()
+                    ->label('Forces enable GPS'),
+                ToggleColumn::make('can_break')
+                    ->sortable()
+                    ->label('Allow add break time')
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -175,8 +187,7 @@ class LocationResource extends Resource
         return [
             'index' => Pages\ListLocations::route('/'),
             'create' => Pages\CreateLocation::route('/create'),
-            'edit' => Pages\EditLocation::route('/{record:qr_code}/edit'),
-            'view' => Pages\ViewLocation::route('/{record:qr_code}/view')
+            'edit' => Pages\EditLocation::route('/{record:qr_code}/edit')
         ];
     }
 }

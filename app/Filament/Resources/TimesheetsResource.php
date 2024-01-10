@@ -61,11 +61,20 @@ class TimesheetsResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('checkin_time')->datetime('H:i m-d-Y'),
-                TextColumn::make('checkout_time')->datetime('H:i m-d-Y'),
-                TextColumn::make('checkpoint_time')->datetime('H:i m-d-Y')->label('Check time'),
+                TextColumn::make('checkin_time')
+                    ->sortable()
+                    ->datetime('H:i m-d-Y'),
+                TextColumn::make('checkout_time')
+                    ->sortable()
+                    ->datetime('H:i m-d-Y'),
+                TextColumn::make('checkpoint_time')
+                    ->datetime('H:i m-d-Y')
+                    ->sortable()
+                    ->label('Check time'),
                 TextColumn::make('break_time'),
-                TextColumn::make('location.name'),
+                TextColumn::make('location.name')
+                ->sortable()
+                ->searchable(),
                 TextColumn::make('log_time')
                     ->state(function (Checkin $record) {
                         if (!isset($record->checkin_time) || !isset($record->checkout_time))

@@ -10,6 +10,8 @@
 
     <title>{{ config('app.name') }}</title>
 
+    <link rel="icon" href="{{ URL::asset('favicon.ico') }}" type="image/x-icon" />
+
     <style>
         [x-cloak] {
             display: none !important;

@@ -7,6 +7,7 @@ use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
@@ -17,8 +18,11 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,7 +31,8 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $slug = 'user';
+    protected static ?string $slug = 'employees';
+    protected static ?string $modelLabel = 'employees';
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
 
@@ -39,26 +44,26 @@ class UserResource extends Resource
                 TextInput::make('email')->email()->required(),
                 TextInput::make('password')->password()->required()->hiddenOn('edit'),
                 DatePicker::make('birthdate'),
-                Grid::make()
-                    ->columns(2)
+                FileUpload::make('image_path')->label('image'),
+                Fieldset::make('Settings')
                     ->schema([
                         TextInput::make('pin_code')
                             ->length(6)
                             ->unique(ignoreRecord: true)
                             ->numeric()
-                            ->required()
-                            ->columnSpan(1),
+                            ->required(),
+
                         Grid::make()
-                            ->columns(1)
                             ->schema([
                                 Toggle::make('allow_manual_entry')
                                     ->default(true),
                                 Toggle::make('allow_qr_code_entry')
                                     ->label('Allow QR code entry')
-                                    ->default(true),
-                            ])->columnSpan(1),
-                    ]),
-                FileUpload::make('image_path')->label('image')
+                                    ->default(true)
+                            ])
+                            ->columns(1)
+                            ->columnSpan(1),
+                    ])->columns(2),
             ]);
     }
 
@@ -71,13 +76,33 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name'),
+                TextColumn::make('name')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('email'),
-                TextColumn::make('birthdate'),
-                IconColumn::make('is_admin')->boolean()->label('Role admin')
+                TextColumn::make('birthdate')
+                    ->sortable(),
+                TextColumn::make('pin_code'),
+                IconColumn::make('is_admin')->boolean()->label('Role admin'),
+                ImageColumn::make('image_path')->label('Avatar'),
+                ToggleColumn::make('allow_manual_entry')
+                    ->sortable(),
+                ToggleColumn::make('allow_qr_code_entry')
+                    ->sortable()
+                    ->label('Allow QR code entry'),
             ])
             ->filters([
-                //
+                SelectFilter::make('allow_manual_entry')
+                    ->options([
+                        'true' => 'True',
+                        'false' => 'False',
+                    ]),
+                SelectFilter::make('allow_qr_code_entry')
+                    ->label('Allow QR code entry')
+                    ->options([
+                        'true' => 'True',
+                        'false' => 'False',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
