@@ -54,15 +54,18 @@ class TimesheetsResource extends Resource
                         DateTimePicker::make('checkin_time')
                             ->seconds(false)
                             ->native(false)
-                            ->maxDate(now()),
+                            ->maxDate(now())
+                            ->requiredUnless('checkout_time', null)
+                            ->label('Check in time'),
                         DateTimePicker::make('checkout_time')
                             ->seconds(false)
                             ->native(false)
                             ->maxDate(now())
-                            ->afterOrEqual('checkin_time'),
+                            ->afterOrEqual('checkin_time')
+                            ->label('Check out time'),
                     ]),
                 TextInput::make('log_time')->readOnly()->hiddenOn('create'),
-                TextInput::make('break_time')->numeric()
+                TextInput::make('break_time')->suffix('minutes')->numeric()
                     ->visibleOn('edit')
                     ->hidden(fn (?Model $record) =>  isset($record->location) && !$record->location->can_break)
             ]);
@@ -73,21 +76,28 @@ class TimesheetsResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('user.name')
-                    ->sortable(),
+                    ->sortable()
+                    ->hidden(!auth()->user()->is_admin)
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('checkin_time')
                     ->sortable()
-                    ->datetime('H:i m-d-Y'),
+                    ->datetime('H:i m-d-Y')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('checkout_time')
                     ->sortable()
-                    ->datetime('H:i m-d-Y'),
+                    ->datetime('H:i m-d-Y')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('checkpoint_time')
                     ->datetime('H:i m-d-Y')
                     ->sortable()
-                    ->label('Check time'),
-                TextColumn::make('break_time'),
+                    ->label('Check time')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('break_time')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('location.name')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('log_time')
                     ->state(function (Checkin $record) {
                         if (!isset($record->checkin_time) || !isset($record->checkout_time))
@@ -104,12 +114,20 @@ class TimesheetsResource extends Resource
             ])
             ->filters([
                 DateFilter::make('checkin_time'),
-                DateRangeFilter::make('checkin_time')->label('Date range'),
+                DateRangeFilter::make('checkin_time')->label('Check in time range'),
+                DateRangeFilter::make('checkout_time')->label('Check out time range'),
+                DateRangeFilter::make('checkpoint_time')->label('Check time range'),
                 SelectFilter::make('location')
                     ->relationship('location', 'name')
                     ->multiple()
                     ->searchable()
+                    ->preload(),
+                SelectFilter::make('user')
+                    ->relationship('user', 'name')
+                    ->multiple()
+                    ->searchable()
                     ->preload()
+                    ->hidden(!auth()->user()->is_admin)
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

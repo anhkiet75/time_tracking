@@ -34,6 +34,7 @@ use Filament\Resources\Tables\Columns;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use SebastianBergmann\Type\TrueType;
@@ -176,31 +177,38 @@ class LocationResource extends Resource
                     ->size(IconColumn\IconColumnSize::Small)
                     ->trueColor('warning')
                     ->falseColor('info')
-                    ->label(''),
+                    ->label('')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('qr_code')
-                    ->label('QR code'),
-                TextColumn::make('name'),
+                    ->label('QR code')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('name')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('address')
                     ->limit(40)
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 ToggleColumn::make('can_logtime')
                     ->sortable()
-                    ->label('Allow log time'),
+                    ->label('Allow log time')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 ToggleColumn::make('enable_gps')
                     ->sortable()
-                    ->label('Forces enable GPS'),
+                    ->label('Forces enable GPS')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 ToggleColumn::make('can_break')
                     ->sortable()
                     ->label('Allow add break time')
+                    ->toggleable(isToggledHiddenByDefault: false)
             ])
             ->filters([
-                Filter::make('Sub locations')
-                    ->query(fn (Builder $query): Builder => $query->where('is_sub_location', true)),
-                Filter::make('Main Locations')
-                    ->query(fn (Builder $query): Builder => $query->where('is_sub_location', false)),
+                TernaryFilter::make('is_sub_location'),
+                TernaryFilter::make('can_logtime'),
+                TernaryFilter::make('enable_gps'),
+                TernaryFilter::make('can_check')
             ])
             ->actions([
-                Action::make('test'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

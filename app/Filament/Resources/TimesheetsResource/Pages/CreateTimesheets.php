@@ -13,10 +13,14 @@ class CreateTimesheets extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $checkin_time = new DateTime($data['checkin_time']);
-        $checkout_time = new DateTime($data['checkout_time']);
-        $interval =  $checkin_time->diff($checkout_time);
-        $data['log_time'] = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
+        if (!$data['checkin_time'] ||  !isset($data['checkout_time'])) {
+            $data['log_time'] = 0;
+        } else {
+            $checkin_time = new DateTime($data['checkin_time']);
+            $checkout_time = new DateTime($data['checkout_time']);
+            $interval =  $checkin_time->diff($checkout_time);
+            $data['log_time'] = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
+        }
         $data['user_id'] = auth()->user()->id;
         return $data;
     }

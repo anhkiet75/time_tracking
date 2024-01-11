@@ -30,6 +30,7 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('')
             ->login(Login::class)
+            ->globalSearch(false)
             ->colors([
                 'primary' => Color::Amber,
             ])

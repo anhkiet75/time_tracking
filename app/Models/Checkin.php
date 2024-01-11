@@ -28,55 +28,79 @@ class Checkin extends Model
 
     public function scopeGetAll(Builder $query): void
     {
-        $query->where('user_id', auth()->user()->id);
+        if (!auth()->user()->is_admin) {
+            $query->where('user_id', auth()->user()->id);
+        }
+        $query;
     }
 
     public function scopeThisWeek(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        }
+        $query;
     }
 
     public function scopeLastWeek(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->subWeek()->startOfWeek()->toDateString(), Carbon::now()->subWeek()->endOfWeek()->toDateString()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->subWeek()->startOfWeek()->toDateString(), Carbon::now()->subWeek()->endOfWeek()->toDateString()]);
+        }
+        $query;
     }
 
     public function scopeThisMonth(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()]);
+        }
+        $query;
     }
 
     public function scopeThisQuarter(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->startOfQuarter()->toDateString(), Carbon::now()->endOfQuarter()->toDateString()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->startOfQuarter()->toDateString(), Carbon::now()->endOfQuarter()->toDateString()]);
+        }
+        $query;
     }
 
     public function scopeLastQuarter(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->subQuarter()->startOfQuarter()->toDateString(), Carbon::now()->subQuarter()->endOfQuarter()->toDateString()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->subQuarter()->startOfQuarter()->toDateString(), Carbon::now()->subQuarter()->endOfQuarter()->toDateString()]);
+        }
+        $query;
     }
 
     public function scopeLastMonth(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->subMonth()->startOfMonth()->toDateString(), Carbon::now()->subMonth()->endOfMonth()->toDateString()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->subMonth()->startOfMonth()->toDateString(), Carbon::now()->subMonth()->endOfMonth()->toDateString()]);
+        }
+        $query;
     }
 
     public function scopeThisYear(Builder $query): void
     {
-        $query
-            ->where('user_id', auth()->user()->id)
-            ->whereBetween('checkin_time', [Carbon::now()->startOfYear()->toDateString(), Carbon::now()->endOfYear()->toDateString()]);
+        if (!auth()->user()->is_admin) {
+            $query
+                ->where('user_id', auth()->user()->id)
+                ->whereBetween('checkin_time', [Carbon::now()->startOfYear()->toDateString(), Carbon::now()->endOfYear()->toDateString()]);
+        }
+        $query;
     }
 }
