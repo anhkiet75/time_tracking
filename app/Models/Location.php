@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Location extends Model
 {
@@ -25,7 +26,7 @@ class Location extends Model
     }
 
     public function subLocations()
-    { 
+    {
         return $this->hasMany(Location::class, 'parent_id');
     }
 
@@ -33,10 +34,8 @@ class Location extends Model
     {
         static::addGlobalScope('business', function (Builder $query) {
             if (auth()->check()) {
-                $query->where('business_id', auth()->user()->business_id);
-                // $query->orderByRaw('COALESCE(id)', 'ASC')->get();
+                $query->where('business_id', auth()->user()->business_id)->orderBy('id', 'ASC');
             }
         });
     }
-
 }

@@ -12,6 +12,7 @@ use Cheesegrits\FilamentGoogleMaps\Fields\Map;
 use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
 use Closure;
 use Filament\Forms;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Hidden;
@@ -52,9 +53,13 @@ class LocationResource extends Resource
         $location = $form->getRecord();
         $business = Business::find(auth()->user()->business_id);
         $number_of_locations = $business->locations->count();
-        $max_allow_locations = isset($business->max_allow_locations)
-            ? ($business->max_allow_locations - $number_of_locations - (isset($location) ? 0 : 1))
-            : 1000  - 1;
+        $max_allow_locations = isset($business->max_allow_locations) ? $business->max_allow_locations : 1000;
+        $available_locations = $max_allow_locations - $number_of_locations;
+        if (isset($location)) {
+            $number_of_current_sub_locations =  $business->locations->where('parent_id', $location->id)->count();
+            $available_locations = $available_locations + $number_of_current_sub_locations;
+        } else  $available_locations = $available_locations - 1;
+
         self::$lat = 10;
         self::$lng = 10;
         if (isset($location)) {
@@ -155,7 +160,7 @@ class LocationResource extends Resource
                                 $data['radius'] = $get('radius');
                                 return $data;
                             })
-                            ->maxItems($max_allow_locations),
+                            ->maxItems($available_locations),
                     ])
             ]);
     }
@@ -166,15 +171,14 @@ class LocationResource extends Resource
             ->columns([
                 IconColumn::make('is_sub_location')
                     ->boolean()
-                    ->trueIcon('heroicon-s-arrow-right')
+                    ->trueIcon('heroicon-s-chevron-right')
                     ->falseIcon('heroicon-m-list-bullet')
                     ->size(IconColumn\IconColumnSize::Small)
                     ->trueColor('warning')
                     ->falseColor('info')
                     ->label(''),
                 TextColumn::make('qr_code')
-                    ->label('QR code')
-                    ->sortable(),
+                    ->label('QR code'),
                 TextColumn::make('name'),
                 TextColumn::make('address')
                     ->limit(40)
@@ -190,10 +194,13 @@ class LocationResource extends Resource
                     ->label('Allow add break time')
             ])
             ->filters([
-                Filter::make('Sub location')
+                Filter::make('Sub locations')
                     ->query(fn (Builder $query): Builder => $query->where('is_sub_location', true)),
+                Filter::make('Main Locations')
+                    ->query(fn (Builder $query): Builder => $query->where('is_sub_location', false)),
             ])
             ->actions([
+                Action::make('test'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

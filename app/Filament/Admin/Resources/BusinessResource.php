@@ -117,8 +117,8 @@ class BusinessResource extends Resource
                     ->color('warning')
                     ->icon('heroicon-o-information-circle')
                     ->action(function (Get $get, ?Model $record) {
-                        $id = $record["admin_id"];
-                        $user = User::find($id);
+                        $id = $record["id"];
+                        $user = User::where('business_id', $id)->where('is_admin', true)->first();
                         Auth::guard('web')->login($user);
                         redirect()->route('filament.app.pages.dashboard');
                     })

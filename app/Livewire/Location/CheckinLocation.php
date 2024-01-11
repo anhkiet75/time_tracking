@@ -91,8 +91,8 @@ class CheckinLocation extends Component implements HasForms
                                 ->height(fn () => '100px')
                                 ->autocompleteReverse(true),
                             TextInput::make('current_location')
-                                ->required()
                                 ->readOnly()
+                                ->required()
                                 ->rules([
                                     fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
                                         if ($this->location->enable_gps) {

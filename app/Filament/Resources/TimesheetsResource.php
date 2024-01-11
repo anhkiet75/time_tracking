@@ -74,8 +74,6 @@ class TimesheetsResource extends Resource
             ->columns([
                 TextColumn::make('user.name')
                     ->sortable(),
-                TextColumn::make('location.parent_id')
-                    ->sortable(),
                 TextColumn::make('checkin_time')
                     ->sortable()
                     ->datetime('H:i m-d-Y'),
@@ -104,16 +102,16 @@ class TimesheetsResource extends Resource
                         );
                     })
             ])
-            ->defaultSort('id', 'desc')
             ->filters([
-                Filter::make('Sub location')
-                    ->query(fn (Builder $query): Builder => $query->where('is_sub_location', true)),
-                BooleanFilter::make('log_time'),
                 DateFilter::make('checkin_time'),
-                DateRangeFilter::make('checkin_time')->label('Date range')
+                DateRangeFilter::make('checkin_time')->label('Date range'),
+                SelectFilter::make('location')
+                    ->relationship('location', 'name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
             ])
             ->actions([
-                Action::make('test'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
