@@ -203,10 +203,14 @@ class LocationResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: false)
             ])
             ->filters([
-                TernaryFilter::make('is_sub_location'),
-                TernaryFilter::make('can_logtime'),
-                TernaryFilter::make('enable_gps'),
+                TernaryFilter::make('is_sub_location')
+                    ->label('Sub location'),
+                TernaryFilter::make('can_logtime')
+                    ->label('Allow log time'),
+                TernaryFilter::make('enable_gps')
+                    ->label('Forces enable GPS'),
                 TernaryFilter::make('can_check')
+                    ->label('Allow add break time')
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
