@@ -11,6 +11,7 @@ use App\Models\User;
 use Cheesegrits\FilamentGoogleMaps\Fields\Map;
 use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
 use Closure;
+use Filament\Actions\Action as ActionsAction;
 use Filament\Forms;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Fieldset;
@@ -31,6 +32,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Tables\Columns;
+use Filament\Support\Enums\ActionSize;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
@@ -200,7 +203,7 @@ class LocationResource extends Resource
                 ToggleColumn::make('can_break')
                     ->sortable()
                     ->label('Allow add break time')
-                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
                 TernaryFilter::make('is_sub_location')
@@ -213,7 +216,17 @@ class LocationResource extends Resource
                     ->label('Allow add break time')
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Action::make('Filter')
+                    ->color('gray')
+                    ->iconButton()
+                    ->icon('heroicon-s-magnifying-glass')
+                    ->size(ActionSize::Small)
+                    ->iconPosition(IconPosition::After)
+                    ->url(fn (Location $location): string => route('filament.app.resources.timesheet.index', ['tableFilters[location][values][0]' => $location->id])),
+                Tables\Actions\EditAction::make()
+                    ->button()
+                    ->size(ActionSize::Small)
+                    ->iconPosition(IconPosition::After),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
