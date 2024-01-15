@@ -97,21 +97,25 @@ class LocationResource extends Resource
                     ->schema([
                         TextInput::make('qr_code')
                             ->label('QR code')
+                            ->columnSpan(1)
                             ->required()
-                            ->unique(ignoreRecord: true)
-                            ->validationMessages([
-                                'unique' => 'This QR is not valid, use a QR that is assigned to your location.',
-                            ])
                             ->rules([
-                                function () {
-                                    return function (string $attribute, $value, Closure $fail) {
+                                function (?Model $record) {
+                                    return function (string $attribute, $value, Closure $fail) use ($record) {
                                         if (!BusinessHelper::validateRangeInternal(auth()->user()->business->id, $value)) {
-                                            $fail('The QR code is invalid.');
+                                            $fail('The QR code is not in QR code ranges');
+                                        }
+                                        $location = Location::where('qr_code', $value);
+                                        if ($location->exists()) {
+                                            if (isset($record)) {
+                                                if ($record->id != $location->first()->id)
+                                                    $fail("This QR is already in use on your location ({$location->first()->name}). Please use another QR that is not assigned to a location.");
+                                            } else
+                                                $fail("This QR is already in use on your location ({$location->first()->name}). Please use another QR that is not assigned to a location.");
                                         }
                                     };
                                 },
-                            ])
-                            ->columnSpan(1),
+                            ]),
                         Placeholder::make('Business')
                             ->label('Business QR code ranges')
                             ->content(fn () => Auth::user()->business->business_range),
@@ -134,15 +138,20 @@ class LocationResource extends Resource
                                 TextInput::make('name')->required(),
                                 TextInput::make('qr_code')
                                     ->required()
-                                    ->unique(ignoreRecord: true)
-                                    ->validationMessages([
-                                        'unique' => 'This QR is not valid, use a QR that is assigned to your location.',
-                                    ])
+                                    ->label('QR code')
                                     ->rules([
-                                        function () {
-                                            return function (string $attribute, $value, Closure $fail) {
+                                        function (?Model $record) {
+                                            return function (string $attribute, $value, Closure $fail) use ($record) {
                                                 if (!BusinessHelper::validateRangeInternal(auth()->user()->business->id, $value)) {
-                                                    $fail('The QR code is invalid.');
+                                                    $fail('The QR code is not in QR code ranges');
+                                                }
+                                                $location = Location::where('qr_code', $value);
+                                                if ($location->exists()) {
+                                                    if (isset($record)) {
+                                                        if ($record->id != $location->first()->id)
+                                                            $fail("This QR is already in use on your location ({$location->first()->name}). Please use another QR that is not assigned to a location.");
+                                                    } else
+                                                        $fail("This QR is already in use on your location ({$location->first()->name}). Please use another QR that is not assigned to a location.");
                                                 }
                                             };
                                         },

@@ -5,18 +5,25 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\BusinessResource\Pages;
 use App\Filament\Admin\Resources\BusinessResource\RelationManagers;
 use App\Filament\Helper\BusinessHelper;
+use App\Forms\Components\QRRanges;
 use App\Models\Business;
 use App\Models\User;
 use Closure;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action as ActionsAction;
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Tables\Actions\Action as TableAction;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,24 +50,59 @@ class BusinessResource extends Resource
                     ->maxLength(255),
                 TextInput::make('phone_number')
                     ->maxLength(20),
-                TextInput::make('business_range')
-                    ->label('Business QR code range')
-                    ->maxLength(255)
-                    ->live(onBlur: true)
-                    ->hintIcon('heroicon-m-question-mark-circle', tooltip: 'Example: 100-200,200-300')
+                QRRanges::make('business_range')
+                    ->view('forms.components.qr-ranges')
+                    ->separator(',')
                     ->required()
-                    ->rules([
-                        function (?Model $record) {
-                            return function (string $attribute, $value, Closure $fail) use ($record) {
-                                if (isset($record)  && $value != $record->business_range) {
-                                    $qr_code_ranges = BusinessHelper::convertInputToRangesArray($value);
-                                    if (!BusinessHelper::validateRange($qr_code_ranges)) {
-                                        $fail('The :attribute is invalid.');
-                                    }
-                                }
-                            };
-                        },
-                    ]),
+                    ->suffixAction(
+                        Action::make('AddQRrange')
+                            ->label('Add QR range')
+                            ->icon('heroicon-s-plus')
+                            ->color('success')
+                            ->form([
+                                TextInput::make('input_qr_range')
+                                    ->label('QR range')
+                                    ->helperText('Example: 100-200')
+                                    ->required()
+                                    ->regex('/^\d+-\d+$/i')
+                                    ->validationMessages([
+                                        'regex' => 'The QR range is not adhere the sample format'
+                                    ])
+                                    ->rules([
+                                        fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                            $qr_code_range = BusinessHelper::convertInputToRangesArray($value);
+                                            if (
+                                                $qr_code_range[0]['start'] > $qr_code_range[0]['end'] ||
+                                                !BusinessHelper::validateRange($qr_code_range)
+                                            ) {
+                                                $fail('The QR range is invalid.');
+                                            }
+                                        }
+                                    ]),
+                            ])
+                            ->modalWidth(MaxWidth::Small)
+                            ->action(function (Set $set, Get $get, array $data) {
+                                $new_ranges = $get('business_range');
+                                $new_ranges[] = $data['input_qr_range'];
+                                $set('business_range', $new_ranges);
+                            })
+                    ),
+                // TagsInput::make('business_range')
+                //     ->separator(','),
+                // TextInput::make('business_range')
+                //     ->label('Business QR code ranges')
+                //     ->maxLength(255)
+                //     ->required()
+                //     ->rules([
+                //         fn (?Model $record) => function (string $attribute, $value, Closure $fail) use ($record) {
+                //             if (isset($record)  && $value != $record->business_range) {
+                //                 $qr_code_ranges = BusinessHelper::convertInputToRangesArray($value);
+                //                 if (!BusinessHelper::validateRange($qr_code_ranges)) {
+                //                     $fail('The :attribute is invalid.');
+                //                 }
+                //             }
+                //         }
+                //     ]),
                 TextInput::make('max_allow_locations')->numeric()->rules(['min:1']),
                 Fieldset::make('Admin account')
                     ->relationship('user')
@@ -99,13 +141,13 @@ class BusinessResource extends Resource
                 Tables\Columns\TextColumn::make('phone_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('admin_id')->hidden()
             ])
             ->filters([
@@ -113,7 +155,7 @@ class BusinessResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Action::make('Login')
+                TableAction::make('Login')
                     ->color('warning')
                     ->icon('heroicon-o-information-circle')
                     ->action(function (Get $get, ?Model $record) {

@@ -44,6 +44,24 @@ class BusinessHelper
         return true;
     }
 
+    public static function validateRangeFrontend($existingRanges, $ranges) {
+        foreach ($ranges as $range) {
+            $startRange = $range['start'];
+            $endRange = $range['end'];
+
+            foreach ($existingRanges as $existingRange) {
+                $existingRange = self::convertInputToRangesArray($existingRange);
+                if (
+                    ($startRange >= $existingRange['start'] && $startRange <= $existingRange['end']) ||
+                    ($endRange >= $existingRange['start'] && $endRange <= $existingRange['end'])
+                ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public static function validateRangeInternal($businessId, $qr_code)
     {
         $existingRanges = BusinessQRCodeRange::where('business_id', $businessId)->get();
