@@ -38,6 +38,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Grouping\Group;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use SebastianBergmann\Type\TrueType;
@@ -56,14 +57,15 @@ class LocationResource extends Resource
     {
         $location = $form->getRecord();
         $business = Business::find(auth()->user()->business_id);
-        $number_of_locations = $business->locations->count();
         $max_allow_locations = isset($business->max_allow_locations) ? $business->max_allow_locations : 1000;
-        $available_locations = $max_allow_locations - $number_of_locations;
+        $available_locations = $max_allow_locations - $business->locations->count();
         if (isset($location)) {
-            $number_of_current_sub_locations =  $business->locations->where('parent_id', $location->id)->count();
-            $available_locations = $available_locations + $number_of_current_sub_locations;
+            if ($location->is_sub_location) $available_locations = 0;
+            else {
+                $number_of_current_sub_locations =  $business->locations->where('parent_id', $location->id)->count();
+                $available_locations = $available_locations + $number_of_current_sub_locations;
+            }
         } else  $available_locations = $available_locations - 1;
-
         self::$lat = 10;
         self::$lng = 10;
         if (isset($location)) {
@@ -214,6 +216,15 @@ class LocationResource extends Resource
                     ->label('Allow add break time')
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
+            ->groups([
+                Group::make('parentLocation.name')
+                    ->label('Main location')
+                    ->collapsible(),
+            ])
+            ->defaultSort(function (Builder $query): Builder {
+                return $query
+                    ->orderByRaw('IFNULL(parent_id,id), parent_id asc');
+            })
             ->filters([
                 TernaryFilter::make('is_sub_location')
                     ->label('Sub location'),

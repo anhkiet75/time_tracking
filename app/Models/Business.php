@@ -70,13 +70,6 @@ class Business extends Model
                 abort(422, 'QR Code range overlaps with existing range.');
             }
         }
-
-        // No overlap, store the range
-        // self::create([
-        //     'business_id' => $businessId,
-        //     'start_range' => $startRange,
-        //     'end_range' => $endRange,
-        // ]);
     }
 
     public static function boot()
