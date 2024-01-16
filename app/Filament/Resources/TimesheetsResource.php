@@ -5,15 +5,19 @@ namespace App\Filament\Resources;
 use App\Filament\Helper\TimesheetHelper;
 use App\Filament\Resources\TimesheetsResource\Pages;
 use App\Filament\Resources\TimesheetsResource\RelationManagers;
+use App\Forms\Components\CheckboxList as ComponentsCheckboxList;
+use App\Forms\Components\CustomCheckboxList;
 use App\Models\Checkin;
 use App\Models\Location;
 use App\Models\Timesheets;
 use Closure;
 use DateTime;
 use Filament\Forms;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -21,6 +25,7 @@ use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\IconPosition;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -46,6 +51,7 @@ class TimesheetsResource extends Resource
 
     protected static ?string $slug = 'timesheet';
     protected static ?string $pluralModelLabel = 'timesheet';
+    protected static $location = Location::class;
 
     public static function form(Form $form): Form
     {
@@ -154,23 +160,34 @@ class TimesheetsResource extends Resource
                     ))
             ])
             ->filters([
-                DateFilter::make('checkin_time'),
+                // DateFilter::make('checkin_time'),
                 DateRangeFilter::make('checkin_time')->label('Check in time range'),
-                DateRangeFilter::make('checkout_time')->label('Check out time range'),
-                DateRangeFilter::make('checkpoint_time')->label('Check time range'),
+                // DateRangeFilter::make('checkout_time')->label('Check out time range'),
+                // DateRangeFilter::make('checkpoint_time')->label('Check time range'),
                 SelectFilter::make('location')
                     ->relationship('location', 'name')
                     ->multiple()
                     ->searchable()
                     ->preload(),
+                Filter::make('location')
+                    ->form([
+                        CustomCheckboxList::make('location')
+                            ->options(Location::pluck('name', 'id')->toArray()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if ($data['location'])
+                            return $query->whereIn('location_id', $data['location']);
+                        return $query;
+                    })
+                    ->label('Featured'),
                 SelectFilter::make('user')
                     ->relationship('user', 'name')
                     ->multiple()
                     ->searchable()
                     ->preload()
                     ->hidden(!auth()->user()->is_admin)
-
             ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(4)
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->button()
