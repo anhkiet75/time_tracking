@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CheckinController;
 use App\Livewire\Location\CheckinLocation;
+use App\Models\Checkin;
 use Illuminate\Support\Facades\Route;
 
 /*

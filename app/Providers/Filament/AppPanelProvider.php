@@ -67,6 +67,11 @@ class AppPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->renderHook(
+                'tables::toolbar.search.after',
+                fn (): string => Blade::render('@livewire(\'export-button\')'),
+                scopes: \App\Filament\Resources\TimesheetsResource\Pages\ListTimesheets::class,
+            );
     }
 }

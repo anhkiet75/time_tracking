@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources;
 
+// use App\Filament\Helper\CustomExport;
+
+use App\Filament\Helper\CustomExport;
 use App\Filament\Helper\TimesheetHelper;
 use App\Filament\Resources\TimesheetsResource\Pages;
 use App\Filament\Resources\TimesheetsResource\RelationManagers;
@@ -29,7 +32,6 @@ use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
-use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
@@ -37,11 +39,12 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
-use Webbingbrasil\FilamentAdvancedFilter\Filters\BooleanFilter;
-use Webbingbrasil\FilamentAdvancedFilter\Filters\DateFilter;
 use Illuminate\Support\Arr;
+use Maatwebsite\Excel\Excel;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Columns\Column;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class TimesheetsResource extends Resource
 {
@@ -160,7 +163,6 @@ class TimesheetsResource extends Resource
                     ))
             ])
             ->filters([
-                // DateFilter::make('checkin_time'),
                 DateRangeFilter::make('checkin_time')->label('Check in time range'),
                 // DateRangeFilter::make('checkout_time')->label('Check out time range'),
                 // DateRangeFilter::make('checkpoint_time')->label('Check time range'),
@@ -180,12 +182,12 @@ class TimesheetsResource extends Resource
                         return $query;
                     })
                     ->label('Featured'),
-                SelectFilter::make('user')
-                    ->relationship('user', 'name')
-                    ->multiple()
-                    ->searchable()
-                    ->preload()
-                    ->hidden(!auth()->user()->is_admin)
+                // SelectFilter::make('user')
+                //     ->relationship('user', 'name')
+                //     ->multiple()
+                //     ->searchable()
+                //     ->preload()
+                //     ->hidden(!auth()->user()->is_admin)
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(4)
             ->actions([
@@ -194,9 +196,21 @@ class TimesheetsResource extends Resource
                     ->size(ActionSize::Small)
                     ->iconPosition(IconPosition::After),
             ])
+            ->headerActions([
+                ExportAction::make()->exports([
+                    CustomExport::make('view')
+                        ->fromTable()
+                        ->askForWriterType(
+                            options: [
+                                Excel::XLSX => 'XLSX',
+                                Excel::CSV => 'CSV',
+                            ]
+                        ),
+                ])
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
                 ]),
             ]);
     }
