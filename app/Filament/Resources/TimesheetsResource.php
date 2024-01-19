@@ -65,7 +65,7 @@ class TimesheetsResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required()
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => ($record->parentLocation ? ($record->parentLocation->name . " - ") : "") . "{$record->name}")
+                    ->getOptionLabelFromRecordUsing(fn(Model $record) => ($record->parentLocation ? ($record->parentLocation->name . " - ") : "") . "{$record->name}")
                     ->hiddenOn('edit'),
                 Grid::make([
                     'md' => 3,
@@ -86,13 +86,12 @@ class TimesheetsResource extends Resource
                             ->numeric()
                             ->rules(['integer'])
                             ->rules([
-                                fn (Get $get) =>
-                                function (string $attribute, $value, Closure $fail) use ($get) {
+                                fn(Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     if (TimesheetHelper::calculateLogTimeInMinutes(
-                                        $get('checkin_time'),
-                                        $get('checkout_time'),
-                                        $value
-                                    ) < 0) {
+                                            $get('checkin_time'),
+                                            $get('checkout_time'),
+                                            $value
+                                        ) < 0) {
                                         $fail('The :attribute is invalid.');
                                     }
                                 }
@@ -182,12 +181,6 @@ class TimesheetsResource extends Resource
                         return $query;
                     })
                     ->label('Featured'),
-                // SelectFilter::make('user')
-                //     ->relationship('user', 'name')
-                //     ->multiple()
-                //     ->searchable()
-                //     ->preload()
-                //     ->hidden(!auth()->user()->is_admin)
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(4)
             ->actions([
@@ -195,18 +188,6 @@ class TimesheetsResource extends Resource
                     ->button()
                     ->size(ActionSize::Small)
                     ->iconPosition(IconPosition::After),
-            ])
-            ->headerActions([
-                ExportAction::make()->exports([
-                    CustomExport::make('view')
-                        ->fromTable()
-                        ->askForWriterType(
-                            options: [
-                                Excel::XLSX => 'XLSX',
-                                Excel::CSV => 'CSV',
-                            ]
-                        ),
-                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -6,6 +6,7 @@ use App\Filament\Helper\BusinessHelper;
 use App\Filament\Resources\LocationResource\Pages;
 use App\Filament\Resources\LocationResource\RelationManagers;
 use App\Models\Business;
+use App\Models\BusinessQRCodeRange;
 use App\Models\Location;
 use App\Models\User;
 use Cheesegrits\FilamentGoogleMaps\Fields\Map;
@@ -57,12 +58,12 @@ class LocationResource extends Resource
     {
         $location = $form->getRecord();
         $business = Business::find(auth()->user()->business_id);
-        $max_allow_locations = isset($business->max_allow_locations) ? $business->max_allow_locations : 1000;
+        $max_allow_locations = $business->max_allow_locations ?? 1000;
         $available_locations = $max_allow_locations - $business->locations->count();
         if (isset($location)) {
             if ($location->is_sub_location) $available_locations = 0;
             else {
-                $number_of_current_sub_locations =  $business->locations->where('parent_id', $location->id)->count();
+                $number_of_current_sub_locations = $business->locations->where('parent_id', $location->id)->count();
                 $available_locations = $available_locations + $number_of_current_sub_locations;
             }
         } else  $available_locations = $available_locations - 1;
@@ -72,6 +73,22 @@ class LocationResource extends Resource
             self::$lat = $location->lat;
             self::$lng = $location->lng;
         }
+
+        $getNextAvailable = function () {
+            $min_qr_code = $_COOKIE['min_qr_code'] ?? 0;
+            $qr_code_ranges = BusinessQRCodeRange::where('business_id', auth()->user()->business_id)
+                ->orderBy('start_range')->get();
+            foreach ($qr_code_ranges as $range)
+                for ($i = $range->start_range; $i <= $range->end_range; $i++) {
+                    if ($i > $min_qr_code && !Location::withoutGlobalScopes()->where('qr_code', $i)->exists()) {
+                        $min_qr_code = $i;
+                        setcookie('min_qr_code', $min_qr_code, time() + 3600, "/");
+                        return $i;
+                    }
+                }
+            return '';
+        };
+
         return $form
             ->schema([
                 Map::make('location')
@@ -100,6 +117,7 @@ class LocationResource extends Resource
                         TextInput::make('qr_code')
                             ->label('QR code')
                             ->columnSpan(1)
+                            ->default($getNextAvailable())
                             ->required()
                             ->rules([
                                 function (?Model $record) {
@@ -120,7 +138,7 @@ class LocationResource extends Resource
                             ]),
                         Placeholder::make('Business')
                             ->label('Business QR code ranges')
-                            ->content(fn () => Auth::user()->business->business_range),
+                            ->content(fn() => Auth::user()->business->business_range),
                         Grid::make()
                             ->columns(2)
                             ->schema([
@@ -140,6 +158,7 @@ class LocationResource extends Resource
                                 TextInput::make('name')->required(),
                                 TextInput::make('qr_code')
                                     ->required()
+                                    ->default($getNextAvailable())
                                     ->label('QR code')
                                     ->rules([
                                         function (?Model $record) {
@@ -175,7 +194,7 @@ class LocationResource extends Resource
                                 $data['radius'] = $get('radius');
                                 return $data;
                             })
-                            ->maxItems($available_locations),
+                            ->maxItems($available_locations)
                     ])
             ]);
     }
@@ -242,7 +261,7 @@ class LocationResource extends Resource
                     ->icon('heroicon-s-magnifying-glass')
                     ->size(ActionSize::Small)
                     ->iconPosition(IconPosition::After)
-                    ->url(fn (Location $location): string => route('filament.app.resources.timesheet.index', ['tableFilters[location][values][0]' => $location->id])),
+                    ->url(fn(Location $location): string => route('filament.app.resources.timesheet.index', ['tableFilters[location][values][0]' => $location->id])),
                 Tables\Actions\EditAction::make()
                     ->button()
                     ->size(ActionSize::Small)

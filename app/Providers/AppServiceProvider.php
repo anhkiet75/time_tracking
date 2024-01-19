@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\URL;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as ContractsLogoutResponse;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Facades\FilamentAsset;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
             \App\Http\Responses\LoginResponse::class
         );
         $this->app->bind(ContractsLogoutResponse::class, \App\Http\Responses\LogoutResponse::class);
+        FilamentAsset::register([
+            AlpineComponent::make('qr-ranges', __DIR__ . '/../../resources/js/dist/components/qr-ranges.js'),
+        ]);
     }
 
     /**
