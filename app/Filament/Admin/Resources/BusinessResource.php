@@ -52,7 +52,6 @@ class BusinessResource extends Resource
                     ->maxLength(20),
                 QRRanges::make('business_range')
                     ->separator(',')
-                    ->required()
                     ->suffixActions([
                         Action::make('RemoveQRrange')
                             ->label('Remove QR range')
