@@ -24,6 +24,7 @@
         "webbingbrasil/filament-advancedfilter": "3.0"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.9",
         "laravel/breeze": "^1.27",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",

@@ -2,9 +2,10 @@
 
 namespace App\Policies;
 
-use App\Models\SuperUser;
+use App\Models\SuperAdmin;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Auth;
 
 class UserPolicy
 {
@@ -13,8 +14,9 @@ class UserPolicy
      */
     public function viewAny($user)
     {
-        if (isset(auth()->user()->is_admin))
+        if (Auth::guard('web')->check()) {
             return auth()->user()->is_admin;
-        return auth()->user() instanceof SuperUser;
+        }
+        return Auth::guard('admin')->check();
     }
 }

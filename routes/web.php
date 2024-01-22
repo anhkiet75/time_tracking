@@ -20,5 +20,6 @@ Route::get('/welcome', fn () => 'welcome');
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
 Route::get('/qr/{qr_code}', CheckinLocation::class);
 // require __DIR__ . '/auth.php';
