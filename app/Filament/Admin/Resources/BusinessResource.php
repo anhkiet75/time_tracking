@@ -112,8 +112,12 @@ class BusinessResource extends Resource
                                     ->rules([
                                         fn(Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                             $qr_code_range = BusinessHelper::convertStringToRangesArray($value);
-                                            if (!BusinessHelper::validateRange($qr_code_range))
-                                                $fail('The QR range is invalid.');
+                                            $used_ranges = BusinessHelper::validateRangeUsed($qr_code_range);
+                                            if (!empty($used_ranges)) {
+                                                if ($used_ranges == ["invalid"])
+                                                    $fail('The QR range is invalid.');
+                                                else $fail("The QR range is invalid. The following QR code ranges is already taken: " . implode(", ", $used_ranges));
+                                            }
                                         }
                                     ]),
                             ])

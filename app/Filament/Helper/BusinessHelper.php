@@ -77,24 +77,29 @@ class BusinessHelper
         return $merged_ranges;
     }
 
-    public static function validateRange(array $ranges)
+    public static function validateRangeUsed(array $ranges)
     {
         $existingRanges = BusinessQRCodeRange::all();
+        $usedRanges = [];
         foreach ($ranges as $range) {
             $startRange = $range['start'];
             $endRange = $range['end'];
             if ($startRange > $endRange)
-                return false;
+                return ["invalid"];
             foreach ($existingRanges as $existingRange) {
                 if (
                     ($startRange >= $existingRange->start_range && $startRange <= $existingRange->end_range) ||
-                    ($endRange >= $existingRange->start_range && $endRange <= $existingRange->end_range)
+                    ($endRange >= $existingRange->start_range && $endRange <= $existingRange->end_range) ||
+                    ($startRange <= $existingRange->start_range && $endRange >= $existingRange->end_range)
                 ) {
-                    return false;
+                    if ($existingRange->start_range == $existingRange->end_range)
+                        $usedRanges[] = $existingRange->start_range;
+                    else
+                        $usedRanges[] = $existingRange->start_range . "-" . $existingRange->end_range;
                 }
             }
         }
-        return true;
+        return $usedRanges;
     }
 
     public static function validateRangeInternal($business_id, $qr_code)

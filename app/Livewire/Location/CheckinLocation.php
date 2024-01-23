@@ -13,6 +13,8 @@ use Filament\Forms\Components\Wizard;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Alignment;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 use Closure;
@@ -26,6 +28,8 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Hidden;
 
 class CheckinLocation extends Component implements HasForms
 {
@@ -34,12 +38,24 @@ class CheckinLocation extends Component implements HasForms
     public $data = null;
     public $location = null;
     public $user = null;
+    public $last_checkin_time = null;
+    public $last_checkout_time = null;
 
     public function mount($qr_code): void
     {
         $this->location = Location::where('qr_code', $qr_code)->firstOrFail();
-        if (isset(auth()->user()->is_checkin) && auth()->user()->is_checkin) {
-            $this->data = Checkin::where('user_id', auth()->user()->id)->latest()->first()->toArray();
+        if (auth()->check()) {
+            $this->data = collect(Checkin::where([
+                ['user_id', auth()->user()->id],
+                ['location_id', $this->location->id]
+            ])
+                ->latest()->first())->toArray();
+            $this->last_checkin_time = $this->data['checkin_time'] ?? "";
+            if (auth()->user()->is_checkin) {
+                $this->last_checkout_time = collect(Checkin::where('user_id', auth()->user()->id)
+                    ->where('location_id', $this->location->id)
+                    ->latest()->skip(1)->take(1)->first())->toArray()['checkout_time'] ?? "";
+            } else $this->last_checkout_time = $this->data['checkout_time'] ?? "";
         }
         $this->form->fill();
     }
@@ -48,6 +64,13 @@ class CheckinLocation extends Component implements HasForms
     {
         $rad = M_PI / 180;
         return acos(sin($lat2 * $rad) * sin($lat1 * $rad) + cos($lat2 * $rad) * cos($lat1 * $rad) * cos($lon2 * $rad - $lon1 * $rad)) * 6371; // Kilometers
+    }
+
+    public static function convertToDateTime($date)
+    {
+        if (!empty($date))
+            return date('H:i d-m-Y', strtotime($date));
+        return $date;
     }
 
     public function form(Form $form): Form
@@ -59,6 +82,7 @@ class CheckinLocation extends Component implements HasForms
                         ->schema([
                             TextInput::make('pin_code')
                                 ->length(6)
+                                ->numeric()
                                 ->required()
                                 ->rules([
                                     function () {
@@ -77,7 +101,7 @@ class CheckinLocation extends Component implements HasForms
                                     },
                                 ])
                         ])
-                        ->hidden(fn () => auth()->check()),
+                        ->hidden(fn() => auth()->check()),
                     Wizard\Step::make('Allow GPS')
                         ->schema([
                             Map::make('location')
@@ -88,13 +112,13 @@ class CheckinLocation extends Component implements HasForms
                                 ->draggable(false)
                                 ->geolocateLabel('Get Location')
                                 ->geolocateOnLoad(true, false)
-                                ->height(fn () => '100px')
+                                ->height(fn() => '100px')
                                 ->autocompleteReverse(true),
                             TextInput::make('current_location')
                                 ->readOnly()
-                                ->required()
+//                                ->required()
                                 ->rules([
-                                    fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    fn(Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
                                         if ($this->location->enable_gps) {
                                             $lat = $this->location->lat;
                                             $lng = $this->location->lng;
@@ -115,30 +139,40 @@ class CheckinLocation extends Component implements HasForms
                             Grid::make()
                                 ->columns(1)
                                 ->schema([
-                                    TextInput::make('checkin_time')
+                                    Forms\Components\Split::make([
+                                        Forms\Components\Placeholder::make('last_checkin_time')
+                                            ->label('The last check in time:')
+                                            ->content(fn() => self::convertToDateTime($this->last_checkin_time)),
+                                        Forms\Components\Placeholder::make('last_checkout_time')
+                                            ->label('The last check out time:')
+                                            ->content(fn() => self::convertToDateTime($this->last_checkout_time)),
+                                    ]),
+                                    Actions::make([
+                                        Action::make('setCheckin')
+                                            ->label('Click to check in')
+                                            ->icon('heroicon-o-check-badge')
+                                            ->color('primary')
+                                            ->action(function (Set $set, $state) {
+                                                $set('checkin_time', date('Y-m-d H:i:s'));
+                                                $this->setCheckin();
+                                            })
+                                            ->hidden(fn() => auth()->check() && auth()->user()->is_checkin),
+                                        Action::make('setCheckout')
+                                            ->label('Click to check out')
+                                            ->color('info')
+                                            ->icon('heroicon-o-check-badge')
+                                            ->action(function (Set $set, $state) {
+                                                $set('checkout_time', date('Y-m-d H:i:s'));
+                                                $this->setCheckout();
+                                            })
+                                            ->hidden(fn() => auth()->check() && !auth()->user()->is_checkin)
+                                    ])->alignment(Alignment::Center),
+                                    Hidden::make('checkin_time')
                                         ->label('Check in at location')
-                                        ->readOnly()
-                                        ->suffixAction(
-                                            Action::make('setCheckin')
-                                                ->icon('heroicon-o-check-badge')
-                                                ->action(function (Set $set, $state) {
-                                                    $set('checkin_time', date('Y-m-d H:i:s'));
-                                                    $this->setCheckin();
-                                                })
-                                        )
-                                        ->hidden(fn () => auth()->check() && auth()->user()->is_checkin == true),
-                                    TextInput::make('checkout_time')
+                                        ->hidden(fn() => auth()->check() && auth()->user()->is_checkin),
+                                    Hidden::make('checkout_time')
                                         ->label('Check out')
-                                        ->readOnly()
-                                        ->suffixAction(
-                                            Action::make('setCheckout')
-                                                ->icon('heroicon-o-check-badge')
-                                                ->action(function (Set $set, $state) {
-                                                    $set('checkout_time', date('Y-m-d H:i:s'));
-                                                    $this->setCheckout();
-                                                })
-                                        )
-                                        ->hidden(fn () => auth()->check() && auth()->user()->is_checkin ==  false),
+                                        ->hidden(fn() => auth()->check() && !auth()->user()->is_checkin),
                                     TextInput::make('break_time')
                                         ->numeric()
                                         ->label('Break time')
@@ -146,12 +180,13 @@ class CheckinLocation extends Component implements HasForms
                                         ->suffixAction(
                                             Action::make('setBreaktime')
                                                 ->icon('heroicon-o-check-badge')
+                                                ->label('Click to set break time')
                                                 ->action(function () {
                                                     $this->setBreakTime();
                                                 })
                                         )
-                                        ->hidden(fn () => !$this->location->can_break),
-                                ])->hidden(fn () => !$this->location->can_logtime),
+                                        ->hidden(fn() => !$this->location->can_break),
+                                ])->hidden(fn() => !$this->location->can_logtime),
                             TextInput::make('checkpoint_time')
                                 ->label('Checkpoint checked')
                                 ->readOnly()
@@ -163,11 +198,11 @@ class CheckinLocation extends Component implements HasForms
                                             $this->setCheckpoint();
                                         })
                                 )
-                                ->hidden(fn () => $this->location->can_logtime)
+                                ->hidden(fn() => $this->location->can_logtime)
                         ])
-                        ->hidden(fn () => auth()->check() && !auth()->user()->allow_qr_code_entry)
+                        ->hidden(fn() => auth()->check() && !auth()->user()->allow_qr_code_entry)
                 ])
-                // ->submitAction(new HtmlString('<button style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);" type="submit" class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 dark:bg-custom-500 dark:hover:bg-custom-400 focus-visible:ring-custom-500/50 dark:focus-visible:ring-custom-400/50 fi-ac-btn-action">Submit</button>'))
+                    ->startOnStep(1)
             ])
             ->statePath('data')
             ->model(Checkin::class);
@@ -184,7 +219,7 @@ class CheckinLocation extends Component implements HasForms
     {
         $checkin_time = new DateTime($checkin_time);
         $checkout_time = new DateTime($checkout_time);
-        $interval =  $checkin_time->diff($checkout_time);
+        $interval = $checkin_time->diff($checkout_time);
         return ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
     }
 
@@ -194,7 +229,7 @@ class CheckinLocation extends Component implements HasForms
         $checkin->break_time = $this->data['break_time'];
         $checkin->save();
         Notification::make()
-            ->title('Add break time successfully')
+            ->title('Set break time successfully')
             ->info()
             ->send();
         return redirect(request()->header('Referer'));
@@ -211,7 +246,7 @@ class CheckinLocation extends Component implements HasForms
         $this->form->model($record)->saveRelationships();
         $this->toggleIsCheckin();
         Notification::make()
-            ->title('Check in successfully')
+            ->title('Check in successfully at ' . date('H:i d-m-Y', strtotime($data['checkin_time'])))
             ->info()
             ->send();
         return redirect(request()->header('Referer'));
@@ -232,7 +267,7 @@ class CheckinLocation extends Component implements HasForms
         $checkin->save();
         $this->toggleIsCheckin();
         Notification::make()
-            ->title('Check out successfully')
+            ->title('Check out successfully at ' . date('H:i d-m-Y', strtotime($data['checkout_time'])))
             ->info()
             ->send();
         return redirect(request()->header('Referer'));
