@@ -13,6 +13,14 @@ async function compile(options) {
     }
 }
 
+async function processFile(fileName) {
+    compile({
+        ...defaultOptions,
+        entryPoints: [`./resources/js/components/${fileName}`],
+        outfile: `./resources/js/dist/components/${fileName}`,
+    });
+}
+
 const defaultOptions = {
     define: {
         "process.env.NODE_ENV": isDev ? `'development'` : `'production'`,
@@ -64,8 +72,5 @@ const defaultOptions = {
     ],
 };
 
-compile({
-    ...defaultOptions,
-    entryPoints: ["./resources/js/components/qr-ranges.js"],
-    outfile: "./resources/js/dist/components/qr-ranges.js",
-});
+const filesToCompile = ["qr-ranges.js"];
+filesToCompile.forEach((file) => processFile(file));

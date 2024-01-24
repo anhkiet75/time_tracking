@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Location;
 
+use App\Forms\Components\RequireGPS;
 use App\Models\Checkin;
 use App\Models\Location;
 use App\Models\User;
@@ -101,24 +102,25 @@ class CheckinLocation extends Component implements HasForms
                                     },
                                 ])
                         ])
-                        ->hidden(fn() => auth()->check()),
+                        ->hidden(fn () => auth()->check()),
                     Wizard\Step::make('Allow GPS')
                         ->schema([
+                            RequireGPS::make('require'),
                             Map::make('location')
                                 ->autocomplete(
                                     fieldName: 'current_location',
                                 )
-                                ->geolocate()
                                 ->draggable(false)
+                                ->geolocate(true)
                                 ->geolocateLabel('Get Location')
                                 ->geolocateOnLoad(true, false)
-                                ->height(fn() => '100px')
+                                ->height(fn () => '100px')
                                 ->autocompleteReverse(true),
                             TextInput::make('current_location')
                                 ->readOnly()
-                                ->required()
+                                //                                ->required()
                                 ->rules([
-                                    fn(Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
                                         if ($this->location->enable_gps) {
                                             $lat = $this->location->lat;
                                             $lng = $this->location->lng;
@@ -142,10 +144,10 @@ class CheckinLocation extends Component implements HasForms
                                     Forms\Components\Split::make([
                                         Forms\Components\Placeholder::make('last_checkin_time')
                                             ->label('The last check in time:')
-                                            ->content(fn() => self::convertToDateTime($this->last_checkin_time)),
+                                            ->content(fn () => self::convertToDateTime($this->last_checkin_time)),
                                         Forms\Components\Placeholder::make('last_checkout_time')
                                             ->label('The last check out time:')
-                                            ->content(fn() => self::convertToDateTime($this->last_checkout_time)),
+                                            ->content(fn () => self::convertToDateTime($this->last_checkout_time)),
                                     ]),
                                     Actions::make([
                                         Action::make('setCheckin')
@@ -156,7 +158,7 @@ class CheckinLocation extends Component implements HasForms
                                                 $set('checkin_time', date('Y-m-d H:i:s'));
                                                 $this->setCheckin();
                                             })
-                                            ->hidden(fn() => auth()->check() && auth()->user()->is_checkin),
+                                            ->hidden(fn () => auth()->check() && auth()->user()->is_checkin),
                                         Action::make('setCheckout')
                                             ->label('Click to check out')
                                             ->color('info')
@@ -165,14 +167,14 @@ class CheckinLocation extends Component implements HasForms
                                                 $set('checkout_time', date('Y-m-d H:i:s'));
                                                 $this->setCheckout();
                                             })
-                                            ->hidden(fn() => auth()->check() && !auth()->user()->is_checkin)
+                                            ->hidden(fn () => auth()->check() && !auth()->user()->is_checkin)
                                     ])->alignment(Alignment::Center),
                                     Hidden::make('checkin_time')
                                         ->label('Check in at location')
-                                        ->hidden(fn() => auth()->check() && auth()->user()->is_checkin),
+                                        ->hidden(fn () => auth()->check() && auth()->user()->is_checkin),
                                     Hidden::make('checkout_time')
                                         ->label('Check out')
-                                        ->hidden(fn() => auth()->check() && !auth()->user()->is_checkin),
+                                        ->hidden(fn () => auth()->check() && !auth()->user()->is_checkin),
                                     TextInput::make('break_time')
                                         ->numeric()
                                         ->label('Break time')
@@ -185,8 +187,8 @@ class CheckinLocation extends Component implements HasForms
                                                     $this->setBreakTime();
                                                 })
                                         )
-                                        ->hidden(fn() => !$this->location->can_break),
-                                ])->hidden(fn() => !$this->location->can_logtime),
+                                        ->hidden(fn () => !$this->location->can_break),
+                                ])->hidden(fn () => !$this->location->can_logtime),
                             TextInput::make('checkpoint_time')
                                 ->label('Checkpoint checked')
                                 ->readOnly()
@@ -198,9 +200,9 @@ class CheckinLocation extends Component implements HasForms
                                             $this->setCheckpoint();
                                         })
                                 )
-                                ->hidden(fn() => $this->location->can_logtime)
+                                ->hidden(fn () => $this->location->can_logtime)
                         ])
-                        ->hidden(fn() => auth()->check() && !auth()->user()->allow_qr_code_entry)
+                        ->hidden(fn () => auth()->check() && !auth()->user()->allow_qr_code_entry)
                 ])
                     ->startOnStep(1)
             ])
